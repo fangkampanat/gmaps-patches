@@ -91,6 +91,8 @@ Build directories and generated `.mpp` files are ignored by Git. Publish an `.mp
 
 GitHub Releases contain compiled `patches-*.mpp` bundles for supported Google Maps versions. Morphe Desktop can retrieve a compatible bundle after this repository is added as a patch source. Release assets do not include original Google Maps APKs or ready-patched APKs; users must supply a compatible clean APK and patch it locally on their computer.
 
+For patch changes that require a new bundle, the maintainer keeps `gradle.properties`, `patches-bundle.json`, the `v<version>` release tag, and `patches-<version>.mpp` aligned, commits and pushes the scoped source changes, then publishes the bundle as a GitHub Release asset. Documentation-only changes do not require a bundle release.
+
 ## Use
 
 1. Open **Settings → Expert mode** in Morphe Desktop and turn it on.
@@ -99,15 +101,6 @@ GitHub Releases contain compiled `patches-*.mpp` bundles for supported Google Ma
 4. Select a clean APK whose full version matches a declared compatibility target.
 5. Review the compatible patch list, ensure `Google Maps MicroG` is enabled, disable only patches you do not want, and start patching.
 6. Keep the same signing key used for previous versions of the patched app and validate the resulting APK on a non-critical device before installing it on a vehicle.
-
-Local artifact naming convention:
-
-```text
-Original APK: og-GMaps-<full-version>.apk
-Patched APK:  GMapsMicroG-<short-version>_<DMonYYYY>.apk
-```
-
-`DMonYYYY` is derived from the original APK file's `LastWriteTime` using invariant English month names. It is not the patch execution date. Never overwrite an existing output with the same derived name.
 
 Do not commit or publish original/patched Google Maps APKs, signing keystores, passwords, result files, or device logs containing personal information.
 
