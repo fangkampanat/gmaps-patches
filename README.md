@@ -11,10 +11,13 @@ This repository contains patch source code. GitHub Releases may contain compiled
 > [!IMPORTANT]
 > A `.mpp` file is a patch bundle, not an installable APK. Install [Morphe Manager](https://morphe.software/), add this GitHub repository URL as a patch source, and provide your own compatible clean Google Maps APK.
 
+> [!WARNING]
+> Google Maps is a large application and may exceed Morphe Manager's Android Java heap limit even on devices with plenty of physical RAM. If patching stalls, reports `OutOfMemoryError`, or Morphe Manager closes, use [Morphe CLI](https://github.com/MorpheApp/morphe-cli) on a computer instead. This is a Manager/device runtime limitation and does not by itself indicate that the patch bundle or APK is incompatible.
+
 ## Quick start
 
 1. Install [ReVanced GmsCore](https://github.com/ReVanced/GmsCore).
-2. Install [Morphe Manager](https://github.com/MorpheApp/morphe-manager) on the Android device that will perform the patching.
+2. Install [Morphe Manager](https://github.com/MorpheApp/morphe-manager) on the Android device that will perform the patching. If the device runs out of heap while processing Maps, use the CLI fallback below.
 3. [Add Google Maps MicroG to Morphe Manager](https://morphe.software/add-source?github=fangkampanat%2Fgmaps-patches%2Fblob%2Frefs%2Fheads%2Fmain%2Fpatches-bundle.json&name=Google%20Maps%20MicroG), or manually add `https://github.com/fangkampanat/gmaps-patches/blob/refs/heads/main/patches-bundle.json` as a custom patch source.
 4. Select a clean Google Maps APK matching a version in the compatibility table below.
 5. Apply `Google Maps MicroG`, then install the resulting APK.
@@ -47,8 +50,32 @@ Compatibility is fingerprint-based. A newer Google Maps release must be inspecte
 
 - A clean, supported Google Maps APK
 - ReVanced GmsCore installed as `app.revanced.android.gms`
-- Morphe Manager or another compatible Morphe patching tool
+- Morphe Manager, Morphe CLI, or another compatible Morphe patching tool
 - A consistent signing key when updating an existing patched installation
+
+## Android memory limits and CLI fallback
+
+Android limits the Java heap available to each process separately from the device's total RAM. A device with 12 GB of RAM can therefore still run out of heap while Morphe Manager decodes and rebuilds a large Google Maps APK.
+
+This was reproduced with Google Maps `26.27.05.941319029` and Morphe Manager `1.23.0` on an Android 15 tablet. Process runtime mode eventually reported `OutOfMemoryError`, while disabling process runtime caused Morphe Manager itself to exit after reaching its app heap limit. Results can vary by Android version and device firmware.
+
+If Morphe Manager stalls, reports `OutOfMemoryError`, or closes during patching:
+
+1. Keep **Bytecode processing mode** set to **Fast**.
+2. A different **Process runtime** memory limit may help on some devices, but it is not guaranteed.
+3. If the failure continues, patch on a computer with [Morphe CLI](https://github.com/MorpheApp/morphe-cli).
+
+Example for Windows PowerShell, using the `.mpp` downloaded from this project's GitHub Release:
+
+```powershell
+java -jar .\morphe-cli-<version>-all.jar patch --exclusive --purge `
+    -p .\patches-<bundle-version>.mpp `
+    -e 'Google Maps MicroG' `
+    -o .\GMapsMicroG.apk `
+    .\original-maps.apk
+```
+
+Do not add `--force`; package, version, SDK, and signer compatibility checks should remain enabled. Keep the same signing keystore when producing an update for an existing patched installation.
 
 ## Build requirements
 
