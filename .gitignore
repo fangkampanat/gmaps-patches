@@ -46,6 +46,7 @@ archive/
 # Local patching artifacts and credentials
 morphe-data/
 morphe-cli-*.jar
+morphe-desktop-*.jar
 *-result.json
 .env
 .env.*

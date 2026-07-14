@@ -2,25 +2,29 @@
 
 An unofficial Google Maps MicroG patch bundle for [ReVanced GmsCore](https://github.com/ReVanced/GmsCore) (`app.revanced.android.gms`). It patches selected original Google Maps APK versions so they can use ReVanced GmsCore for Google account and service compatibility. ReVanced GmsCore is also commonly searched for as **ReVanced MicroG**.
 
-[**Add Google Maps MicroG to Morphe Manager**](https://morphe.software/add-source?github=fangkampanat%2Fgmaps-patches%2Fblob%2Frefs%2Fheads%2Fmain%2Fpatches-bundle.json&name=Google%20Maps%20MicroG)
+[**Add Google Maps MicroG to Morphe Desktop**](https://morphe.software/add-source?github=fangkampanat%2Fgmaps-patches%2Fblob%2Frefs%2Fheads%2Fmain%2Fpatches-bundle.json&name=Google%20Maps%20MicroG)
 
-The bundle is designed for Morphe-compatible patching workflows while keeping an independent project identity. It is not an official Google Maps, ReVanced, or Morphe release.
+The bundle is designed for Morphe Desktop while keeping an independent project identity. It is not an official Google Maps, ReVanced, or Morphe release.
 
 This repository contains patch source code. GitHub Releases may contain compiled `.mpp` patch bundles only. The project does not distribute original or patched Google Maps APKs, signing keys, or user data.
 
 > [!IMPORTANT]
-> A `.mpp` file is a patch bundle, not an installable APK. Install [Morphe Manager](https://morphe.software/), add this GitHub repository URL as a patch source, and provide your own compatible clean Google Maps APK.
+> A `.mpp` file is a patch bundle, not an installable APK. Run [Morphe Desktop](https://github.com/MorpheApp/morphe-desktop) on a computer, add this repository as a patch source, and provide your own compatible clean Google Maps APK.
 
 > [!WARNING]
-> Google Maps is a large application and may exceed Morphe Manager's Android Java heap limit even on devices with plenty of physical RAM. If patching stalls, reports `OutOfMemoryError`, or Morphe Manager closes, use [Morphe CLI](https://github.com/MorpheApp/morphe-cli) on a computer instead. This is a Manager/device runtime limitation and does not by itself indicate that the patch bundle or APK is incompatible.
+> Patch Google Maps on a computer. Its APK is too large for a reliable phone-based patching workflow and may exceed Android application heap limits even when the phone has plenty of physical RAM.
 
-## Quick start
+## Quick start with Morphe Desktop
 
-1. Install [ReVanced GmsCore](https://github.com/ReVanced/GmsCore).
-2. Install [Morphe Manager](https://github.com/MorpheApp/morphe-manager) on the Android device that will perform the patching. If the device runs out of heap while processing Maps, use the CLI fallback below.
-3. [Add Google Maps MicroG to Morphe Manager](https://morphe.software/add-source?github=fangkampanat%2Fgmaps-patches%2Fblob%2Frefs%2Fheads%2Fmain%2Fpatches-bundle.json&name=Google%20Maps%20MicroG), or manually add `https://github.com/fangkampanat/gmaps-patches/blob/refs/heads/main/patches-bundle.json` as a custom patch source.
-4. Select a clean Google Maps APK matching a version in the compatibility table below.
-5. Apply `Google Maps MicroG`, then install the resulting APK.
+1. Install Java 21 or newer on the computer.
+2. Download the latest `morphe-desktop-*-all.jar` from [Morphe Desktop Releases](https://github.com/MorpheApp/morphe-desktop/releases/latest), place it in a permanent writable folder, and double-click it to open the GUI.
+3. In Quick mode, click the current source status at the top of the window, such as **LATEST STABLE**, to open **Patch Sources**.
+4. Click **Add Source**, select **Remote**, enter `Google Maps MicroG` as the name and `https://github.com/fangkampanat/gmaps-patches` as the repository URL, then click **Add**.
+5. Select the new `Google Maps MicroG` source and click **Done**.
+6. Drag a clean Google Maps APK matching a version in the compatibility table below into Morphe Desktop. Do not use **Continue Anyway** for an unsupported version.
+7. Click **Patch**. Quick mode automatically applies the default `Google Maps MicroG` patch from the selected source.
+8. Keep and back up the `morphe-data/morphe.keystore` file created beside the JAR. The same signing key is required to install future patched versions as updates.
+9. Install [ReVanced GmsCore](https://github.com/ReVanced/GmsCore) on the target device, then copy and install the patched APK produced by Morphe Desktop.
 
 ## What the patch does
 
@@ -50,32 +54,14 @@ Compatibility is fingerprint-based. A newer Google Maps release must be inspecte
 
 - A clean, supported Google Maps APK
 - ReVanced GmsCore installed as `app.revanced.android.gms`
-- Morphe Manager, Morphe CLI, or another compatible Morphe patching tool
+- A computer with Java 21 or newer and Morphe Desktop
 - A consistent signing key when updating an existing patched installation
 
-## Android memory limits and CLI fallback
+## Why patching is desktop-only
 
-Android limits the Java heap available to each process separately from the device's total RAM. A device with 12 GB of RAM can therefore still run out of heap while Morphe Manager decodes and rebuilds a large Google Maps APK.
+Google Maps is large enough to exhaust the Java heap available to Android patching applications. This project therefore supports Morphe Desktop's GUI on a computer as the normal patching workflow. Phone and tablet patching are not recommended.
 
-This was reproduced with Google Maps `26.27.05.941319029` and Morphe Manager `1.23.0` on an Android 15 tablet. Process runtime mode eventually reported `OutOfMemoryError`, while disabling process runtime caused Morphe Manager itself to exit after reaching its app heap limit. Results can vary by Android version and device firmware.
-
-If Morphe Manager stalls, reports `OutOfMemoryError`, or closes during patching:
-
-1. Keep **Bytecode processing mode** set to **Fast**.
-2. A different **Process runtime** memory limit may help on some devices, but it is not guaranteed.
-3. If the failure continues, patch on a computer with [Morphe CLI](https://github.com/MorpheApp/morphe-cli).
-
-Example for Windows PowerShell, using the `.mpp` downloaded from this project's GitHub Release:
-
-```powershell
-java -jar .\morphe-cli-<version>-all.jar patch --exclusive --purge `
-    -p .\patches-<bundle-version>.mpp `
-    -e 'Google Maps MicroG' `
-    -o .\GMapsMicroG.apk `
-    .\original-maps.apk
-```
-
-Do not add `--force`; package, version, SDK, and signer compatibility checks should remain enabled. Keep the same signing keystore when producing an update for an existing patched installation.
+Compatibility checks must remain enabled. If Morphe Desktop shows **Continue Anyway**, use a supported clean APK instead of bypassing the version check. Keep the same signing keystore when producing an update for an existing patched installation.
 
 ## Build requirements
 
@@ -102,16 +88,15 @@ Build directories and generated `.mpp` files are ignored by Git. Publish an `.mp
 
 ## Releases
 
-GitHub Releases contain compiled `patches-*.mpp` bundles for supported Google Maps versions. Morphe Manager can retrieve a compatible bundle after this repository is added as a patch source. Release assets do not include original Google Maps APKs or ready-patched APKs; users must supply a compatible clean APK and patch it locally.
+GitHub Releases contain compiled `patches-*.mpp` bundles for supported Google Maps versions. Morphe Desktop can retrieve a compatible bundle after this repository is added as a patch source. Release assets do not include original Google Maps APKs or ready-patched APKs; users must supply a compatible clean APK and patch it locally on their computer.
 
 ## Use
 
-1. Add this GitHub repository URL as a patch source in Morphe Manager, or build/download the `.mpp` bundle for another compatible workflow.
-2. Let the patching tool load the matching patch bundle.
-3. Select a clean APK whose full version matches a declared compatibility target.
-4. Apply `Google Maps MicroG`.
-5. Rebuild and sign with the same key used for previous versions of the patched app.
-6. Validate on a non-critical device before installing it on a vehicle.
+1. Open Morphe Desktop on a computer in Quick mode.
+2. Click the source status at the top of the window, then use **Add Source** → **Remote** to add `https://github.com/fangkampanat/gmaps-patches`.
+3. Select the `Google Maps MicroG` source and click **Done**.
+4. Select a clean APK whose full version matches a declared compatibility target, then click **Patch**.
+5. Keep the same signing key used for previous versions of the patched app and validate the resulting APK on a non-critical device before installing it on a vehicle.
 
 Local artifact naming convention:
 

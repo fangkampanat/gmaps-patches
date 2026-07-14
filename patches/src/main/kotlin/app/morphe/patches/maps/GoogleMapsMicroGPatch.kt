@@ -64,7 +64,7 @@ private val manifestPatch = resourcePatch {
 val googleMapsMicroGPatch = bytecodePatch(
     name = "Google Maps MicroG",
     description = "Routes supported Google Maps builds through ReVanced GmsCore using the patched Maps package and known Google Maps certificate spoof metadata.",
-    default = false,
+    default = true,
 ) {
     compatibleWith(compatibility)
     dependsOn(manifestPatch)
