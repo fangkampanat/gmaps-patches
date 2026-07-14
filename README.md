@@ -14,17 +14,18 @@ This repository contains patch source code. GitHub Releases may contain compiled
 > [!WARNING]
 > Patch Google Maps on a computer. Its APK is too large for a reliable phone-based patching workflow and may exceed Android application heap limits even when the phone has plenty of physical RAM.
 
-## Quick start with Morphe Desktop
+## Recommended workflow with Morphe Desktop
 
-1. Install Java 21 or newer on the computer.
-2. Download the latest `morphe-desktop-*-all.jar` from [Morphe Desktop Releases](https://github.com/MorpheApp/morphe-desktop/releases/latest), place it in a permanent writable folder, and double-click it to open the GUI.
-3. In Quick mode, click the current source status at the top of the window, such as **LATEST STABLE**, to open **Patch Sources**.
-4. Click **Add Source**, select **Remote**, enter `Google Maps MicroG` as the name and `https://github.com/fangkampanat/gmaps-patches` as the repository URL, then click **Add**.
-5. Select the new `Google Maps MicroG` source and click **Done**.
-6. Drag a clean Google Maps APK matching a version in the compatibility table below into Morphe Desktop. Do not use **Continue Anyway** for an unsupported version.
-7. Click **Patch**. Quick mode automatically applies the default `Google Maps MicroG` patch from the selected source.
-8. Keep and back up the `morphe-data/morphe.keystore` file created beside the JAR. The same signing key is required to install future patched versions as updates.
-9. Install [ReVanced GmsCore](https://github.com/ReVanced/GmsCore) on the target device, then copy and install the patched APK produced by Morphe Desktop.
+Install Java 21 or newer, download the latest `morphe-desktop-*-all.jar` from [Morphe Desktop Releases](https://github.com/MorpheApp/morphe-desktop/releases/latest), place it in a permanent writable folder, and double-click it to open the GUI. Then:
+
+1. Open **Settings → Expert mode** and turn it on. Expert mode provides full control over patch sources, releases, patch selection, and signing.
+2. Click the **N Sources** indicator at the top of the window to open the source manager.
+3. Click **Add Source**, select **Remote**, enter `Google Maps MicroG` as the name and `https://github.com/fangkampanat/gmaps-patches` as the repository URL, then click **Add**.
+4. Ensure the new `Google Maps MicroG` source is enabled and shows **Stable Latest**, then close the source manager. Other sources may remain enabled; Expert mode combines patches from every enabled source.
+5. Drag a clean Google Maps APK matching a version in the compatibility table below into Morphe Desktop. Do not use **Continue Anyway** for an unsupported version.
+6. Review the combined compatible patch list, ensure `Google Maps MicroG` is enabled, disable only patches you do not want, and start patching.
+7. Keep and back up the `morphe-data/morphe.keystore` file created beside the JAR. The same signing key is required to install future patched versions as updates.
+8. Install [ReVanced GmsCore](https://github.com/ReVanced/GmsCore) on the target device, then copy and install the patched APK produced by Morphe Desktop.
 
 ## What the patch does
 
@@ -92,11 +93,12 @@ GitHub Releases contain compiled `patches-*.mpp` bundles for supported Google Ma
 
 ## Use
 
-1. Open Morphe Desktop on a computer in Quick mode.
-2. Click the source status at the top of the window, then use **Add Source** → **Remote** to add `https://github.com/fangkampanat/gmaps-patches`.
-3. Select the `Google Maps MicroG` source and click **Done**.
-4. Select a clean APK whose full version matches a declared compatibility target, then click **Patch**.
-5. Keep the same signing key used for previous versions of the patched app and validate the resulting APK on a non-critical device before installing it on a vehicle.
+1. Open **Settings → Expert mode** in Morphe Desktop and turn it on.
+2. Open the source manager, then use **Add Source** → **Remote** to add `https://github.com/fangkampanat/gmaps-patches` and enable it.
+3. Leave any other desired sources enabled; Expert mode combines patches from all enabled sources.
+4. Select a clean APK whose full version matches a declared compatibility target.
+5. Review the compatible patch list, ensure `Google Maps MicroG` is enabled, disable only patches you do not want, and start patching.
+6. Keep the same signing key used for previous versions of the patched app and validate the resulting APK on a non-critical device before installing it on a vehicle.
 
 Local artifact naming convention:
 
