@@ -1,4 +1,4 @@
-# Maps Patches — Google Maps MicroG for ReVanced GmsCore
+# Google Maps MicroG for ReVanced GmsCore
 
 An unofficial Google Maps MicroG patch bundle for [ReVanced GmsCore](https://github.com/ReVanced/GmsCore) (`app.revanced.android.gms`). It patches selected original Google Maps APK versions so they can use ReVanced GmsCore for Google account and service compatibility. ReVanced GmsCore is also commonly searched for as **ReVanced MicroG**.
 
