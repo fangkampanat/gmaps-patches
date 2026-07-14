@@ -2,7 +2,7 @@ group = "app.morphe"
 
 patches {
     about {
-        name = "Fank Maps Patches"
+        name = "Maps Patches"
         description = "Google Maps MicroG patch for ReVanced GmsCore, applied with Morphe Manager"
         source = "https://github.com/fangkampanat/gmaps-patches"
         author = "Fank"

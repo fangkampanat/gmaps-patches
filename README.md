@@ -1,4 +1,4 @@
-# Fank Maps Patches — Google Maps MicroG for ReVanced GmsCore
+# Maps Patches — Google Maps MicroG for ReVanced GmsCore
 
 An unofficial Google Maps MicroG patch bundle for [ReVanced GmsCore](https://github.com/ReVanced/GmsCore) (`app.revanced.android.gms`). It patches selected original Google Maps APK versions so they can use ReVanced GmsCore for Google account and service compatibility. ReVanced GmsCore is also commonly searched for as **ReVanced MicroG**.
 
@@ -123,6 +123,6 @@ Copyright and attribution notices in individual source files must be preserved.
 
 This project is distributed under the [GNU General Public License v3.0](LICENSE), including the additional GPLv3 Section 7 conditions recorded in [NOTICE](NOTICE).
 
-`NOTICE` must remain in source and derivative distributions. **Fank Maps Patches** is an independent project name and is not affiliated with or endorsed by MorpheApp.
+`NOTICE` must remain in source and derivative distributions. **Maps Patches** is an independent project name and is not affiliated with or endorsed by MorpheApp.
 
 Google Maps and related names are trademarks of Google LLC. BYD is a trademark of its respective owner.
