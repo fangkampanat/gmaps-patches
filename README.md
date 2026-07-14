@@ -2,6 +2,8 @@
 
 An unofficial Google Maps MicroG patch bundle for [ReVanced GmsCore](https://github.com/ReVanced/GmsCore) (`app.revanced.android.gms`). It patches selected original Google Maps APK versions so they can use ReVanced GmsCore for Google account and service compatibility. ReVanced GmsCore is also commonly searched for as **ReVanced MicroG**.
 
+[**Add Google Maps MicroG to Morphe Manager**](https://morphe.software/add-source?github=fangkampanat%2Fgmaps-patches&name=Google%20Maps%20MicroG)
+
 The bundle is designed for Morphe-compatible patching workflows while keeping an independent project identity. It is not an official Google Maps, ReVanced, or Morphe release.
 
 This repository contains patch source code. GitHub Releases may contain compiled `.mpp` patch bundles only. The project does not distribute original or patched Google Maps APKs, signing keys, or user data.
@@ -13,7 +15,7 @@ This repository contains patch source code. GitHub Releases may contain compiled
 
 1. Install [ReVanced GmsCore](https://github.com/ReVanced/GmsCore).
 2. Install [Morphe Manager](https://github.com/MorpheApp/morphe-manager) on the Android device that will perform the patching.
-3. [Add this repository to Morphe Manager](https://morphe.software/add-source?github=fangkampanat%2Fgmaps-patches), or manually add `https://github.com/fangkampanat/gmaps-patches` as a custom patch source.
+3. [Add Google Maps MicroG to Morphe Manager](https://morphe.software/add-source?github=fangkampanat%2Fgmaps-patches&name=Google%20Maps%20MicroG), or manually add `https://github.com/fangkampanat/gmaps-patches` as a custom patch source.
 4. Select a clean Google Maps APK matching a version in the compatibility table below.
 5. Apply `Google Maps MicroG`, then install the resulting APK.
 
