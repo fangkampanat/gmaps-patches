@@ -44,10 +44,11 @@ The `Google Maps MicroG` patch:
 
 | Google Maps version | Status |
 |---|---|
+| `26.28.03.942936911` | Inspected compatibility target; runtime validation pending |
 | `26.27.05.941319029` | Validated on a BYD Dolphin infotainment system |
 | `26.26.04.935742811` | Legacy compatibility target |
 
-Version `26.27.05.941319029` was confirmed to launch, recognize the GmsCore account, load online maps, obtain GPS location, and navigate normally during real use on the vehicle. Tablet validation covered launch, account access, online maps, and update-over-install; tablet GPS was intentionally not used as a validation source.
+Version `26.28.03.942936911` has been inspected for package identity, SDK levels, signer certificates, and the three required bytecode hooks, but it remains a candidate until runtime validation is complete. Version `26.27.05.941319029` was confirmed to launch, recognize the GmsCore account, load online maps, obtain GPS location, and navigate normally during real use on the vehicle. Tablet validation covered launch, account access, online maps, and update-over-install; tablet GPS was intentionally not used as a validation source.
 
 Compatibility is fingerprint-based. A newer Google Maps release must be inspected before support is added; a successful build alone does not prove runtime compatibility.
 
