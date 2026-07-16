@@ -92,7 +92,9 @@ Build directories and generated `.mpp` files are ignored by Git. Publish an `.mp
 
 GitHub Releases contain compiled `patches-*.mpp` bundles for supported Google Maps versions. Morphe Desktop can retrieve a compatible bundle after this repository is added as a patch source. Release assets do not include original Google Maps APKs or ready-patched APKs; users must supply a compatible clean APK and patch it locally on their computer.
 
-For patch changes that require a new bundle, the maintainer keeps `gradle.properties`, `patches-bundle.json`, the `v<version>` release tag, and `patches-<version>.mpp` aligned, commits and pushes the scoped source changes, then publishes the bundle as a GitHub Release asset. Documentation-only changes do not require a bundle release.
+For patch changes that require a new bundle, the maintainer develops on `dev` while `main` continues serving the last BYD-validated bundle. The candidate's `gradle.properties`, `patches-bundle.json`, `v<version>` prerelease tag, and `patches-<version>.mpp` stay aligned. After BYD validation passes, the tested `dev` commit is merged or fast-forwarded into `main` and the same prerelease asset is promoted without rebuilding. Failed candidates are not promoted or overwritten; the next candidate uses a new bundle version. Documentation-only changes do not require a bundle release.
+
+Candidate testers can select **Follow Dev** for this source in Morphe Desktop Expert mode. Normal users should remain on **Follow Stable**.
 
 ## Use
 
