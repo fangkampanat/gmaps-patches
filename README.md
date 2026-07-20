@@ -48,7 +48,7 @@ The source must be added manually in Morphe Desktop:
 
 5. Click **Add**, then confirm the source is enabled and set to **Follow Stable**.
 
-Use **Follow Dev** only when testing a prerelease candidate.
+Only tested Stable bundles are published by this repository.
 
 ## Patch Google Maps
 
