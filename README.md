@@ -60,15 +60,20 @@ Use **Follow Dev** only when testing a prerelease candidate.
 
 Google Maps is large, so patch it on a computer rather than a phone or tablet.
 
-## Supported versions
+## Supported versions and tested configurations
 
 | Google Maps version | Status |
 |---|---|
-| `26.28.03.942936911` | BYD validated |
-| `26.27.05.941319029` | Previous BYD-validated target |
+| `26.28.03.942936911` | Tested |
+| `26.27.05.941319029` | Previously tested |
 | `26.26.04.935742811` | Legacy target |
 
-New Google Maps versions must be inspected before support is added. A successful patch alone does not prove runtime compatibility.
+The patch has been tested in these configurations:
+
+- An Android tablet with the official Google Play services stack also installed, using [ReVanced GmsCore v0.3.13.3.250932](https://github.com/ReVanced/GmsCore/releases/tag/v0.3.13.3.250932) (prerelease). This configuration verifies that the patched Maps app can coexist with the official Google services stack.
+- A BYD vehicle head unit using [ReVanced GmsCore v0.3.13.2.250932](https://github.com/ReVanced/GmsCore/releases/tag/v0.3.13.2.250932).
+
+These are known working configurations, not an exhaustive compatibility guarantee. New Google Maps versions must be inspected before support is added, and a successful patch alone does not prove runtime compatibility.
 
 ## Notes
 
