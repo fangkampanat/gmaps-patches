@@ -48,10 +48,10 @@ Other GmsCore versions may work with the patched APK but have not been verified 
 
 ## Add the patch source
 
-The source must be added manually in Morphe Desktop:
+The recommended workflow selects this repository as the active source before patching Google Maps. This keeps patches from other sources out of the Google Maps patch session.
 
-1. Open **Settings** and enable **Expert mode**.
-2. Click the **N Sources** button at the top center of the window.
+1. Open Morphe Desktop.
+2. Click the patch source button at the top center of the window. It shows the current source name and Stable bundle version.
 3. Click **Add Source** and select **Remote**.
 4. Enter:
 
@@ -60,17 +60,21 @@ The source must be added manually in Morphe Desktop:
    | Name | `Google Maps for ReVanced GmsCore` |
    | Repository URL | `https://github.com/fangkampanat/gmaps-patches` |
 
-5. Click **Add**, then confirm the source is enabled and set to **Follow Stable**.
+5. Click **Add**.
+6. In **Patch Sources**, select the circle on the right side of this source to make it the active source.
+7. Click **Done** and confirm the source name and Stable bundle version appear at the top center of the Home screen.
 
 Only tested Stable bundles are published by this repository.
 
 ## Patch Google Maps
 
-1. Select a clean, supported Google Maps APK in Morphe Desktop.
-2. Review the compatible patches and make sure **Google Maps MicroG** (the current Stable patch name) is enabled.
-3. Do not use **Continue Anyway** for an unsupported APK.
-4. Start patching, then install the resulting APK on the target device.
-5. Keep `morphe-data/morphe.keystore` backed up. The same key is required for update-over-install.
+1. Confirm this repository's name and Stable bundle version appear at the top center of the Home screen.
+2. Drop a clean, supported Google Maps APK onto **Drop APK here**, or click that area to browse for the file.
+3. After the APK loads, confirm the screen shows **Google Maps** and **PATCHES 1 enabled**.
+4. Click **PATCH WITH DEFAULTS**.
+5. When patching finishes, install the resulting APK on the target device.
+
+To patch an app from another source later, click the patch source button at the top center and select that source using the circle on the right. The other source does not need to be removed.
 
 ## Credits
 
