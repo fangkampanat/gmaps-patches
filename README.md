@@ -1,8 +1,10 @@
-# Google Maps MicroG for ReVanced GmsCore
+<a id="google-maps-microg"></a>
+
+# Google Maps for ReVanced GmsCore
 
 An unofficial `.mpp` patch source for using supported Google Maps APKs with [ReVanced GmsCore](https://github.com/ReVanced/GmsCore) (`app.revanced.android.gms`) through [Morphe Desktop](https://github.com/MorpheApp/morphe-desktop).
 
-This repository does not distribute original or patched Google Maps APKs, signing keys, or user data.
+This repository does not distribute Google Maps APKs, whether original or patched.
 
 ## 🩹 Patches list
 
@@ -27,10 +29,22 @@ This repository does not distribute original or patched Google Maps APKs, signin
 
 ## Requirements
 
-- A computer with Java 21 or newer
+- A computer with Java 21 or newer (Google Maps is too large for practical patching on a phone or tablet)
 - The latest [Morphe Desktop](https://github.com/MorpheApp/morphe-desktop/releases/latest)
-- A clean Google Maps APK from the supported versions below
-- ReVanced GmsCore installed on the target device
+- A clean Google Maps APK matching a version listed in the Patches list
+
+## GmsCore setup and tested configurations
+
+The patched APK requires ReVanced GmsCore for Google sign-in and related Google services. Use the configuration that matches the target device:
+
+| Target device | GmsCore configuration | Validation |
+|---|---|---|
+| Official Google Play services installed | **User** variant of [ReVanced GmsCore v0.3.13.3.250932](https://github.com/ReVanced/GmsCore/releases/tag/v0.3.13.3.250932) (prerelease) | Tested on an Android tablet. This version includes [improvements for side-by-side installation](https://github.com/ReVanced/GmsCore/commit/776a8fb) with official Google services. |
+| No official GMS | [ReVanced GmsCore v0.3.13.2.250932](https://github.com/ReVanced/GmsCore/releases/tag/v0.3.13.2.250932) | Tested on a BYD vehicle head unit. |
+
+> **Not supported:** [Morphe MicroG-RE](https://github.com/MorpheApp/MicroG-RE) `v6.1.4` was tested but did not work with this patched APK. Google account token refresh failed with `INVALID_APPID`, leaving Maps offline.
+
+Other GmsCore versions may work with the patched APK but have not been verified by this project.
 
 ## Add the patch source
 
@@ -43,7 +57,7 @@ The source must be added manually in Morphe Desktop:
 
    | Field | Value |
    |---|---|
-   | Name | `Google Maps MicroG` |
+   | Name | `Google Maps for ReVanced GmsCore` |
    | Repository URL | `https://github.com/fangkampanat/gmaps-patches` |
 
 5. Click **Add**, then confirm the source is enabled and set to **Follow Stable**.
@@ -53,27 +67,15 @@ Only tested Stable bundles are published by this repository.
 ## Patch Google Maps
 
 1. Select a clean, supported Google Maps APK in Morphe Desktop.
-2. Review the compatible patches and make sure **Google Maps MicroG** is enabled.
+2. Review the compatible patches and make sure **Google Maps MicroG** (the current Stable patch name) is enabled.
 3. Do not use **Continue Anyway** for an unsupported APK.
 4. Start patching, then install the resulting APK on the target device.
 5. Keep `morphe-data/morphe.keystore` backed up. The same key is required for update-over-install.
 
-Google Maps is large, so patch it on a computer rather than a phone or tablet.
+## Credits
 
-## Supported versions and tested configurations
-
-| Google Maps version | Status |
-|---|---|
-| `26.28.03.942936911` | Tested |
-| `26.27.05.941319029` | Previously tested |
-| `26.26.04.935742811` | Legacy target |
-
-The patch has been tested in these configurations:
-
-- An Android tablet with the official Google Play services stack also installed, using [ReVanced GmsCore v0.3.13.3.250932](https://github.com/ReVanced/GmsCore/releases/tag/v0.3.13.3.250932) (prerelease). This configuration verifies that the patched Maps app can coexist with the official Google services stack.
-- A BYD vehicle head unit using [ReVanced GmsCore v0.3.13.2.250932](https://github.com/ReVanced/GmsCore/releases/tag/v0.3.13.2.250932).
-
-These are known working configurations, not an exhaustive compatibility guarantee. New Google Maps versions must be inspected before support is added, and a successful patch alone does not prove runtime compatibility.
+- [Morphe](https://github.com/MorpheApp) for Morphe Desktop, patching tools, and the upstream patch code this project builds upon.
+- [ReVanced](https://github.com/ReVanced) for the original GmsCore support implementation and ReVanced GmsCore.
 
 ## Notes
 
