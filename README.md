@@ -9,7 +9,7 @@ This repository does not distribute Google Maps APKs, whether original or patche
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.0.6](https://github.com/fangkampanat/gmaps-patches/releases/tag/v1.0.6)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;1 patch total
+> **[v1.0.7](https://github.com/fangkampanat/gmaps-patches/releases/tag/v1.0.7)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;1 patch total
 <details open>
 <summary>📦 Google Maps&nbsp;&nbsp;•&nbsp;&nbsp;1 patch</summary>
 <br>
@@ -105,5 +105,6 @@ The script finds the Morphe Desktop JAR automatically and applies the `en-US` lo
 
 - A `.mpp` file is a patch bundle, not an installable APK.
 - The patched app uses package name `app.morphe.android.apps.maps`.
+- The patch preserves Google Maps' original picture-in-picture declaration.
 - The project is unofficial and is not supported or endorsed by Google, BYD, ReVanced, or Morphe.
 - Source code is licensed under [GPL-3.0](LICENSE). Preserve [NOTICE](NOTICE) in source and derivative distributions.
