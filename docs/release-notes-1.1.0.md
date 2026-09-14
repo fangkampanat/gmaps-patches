@@ -1,5 +1,3 @@
-# gmaps-patches 1.1.0 — MicroG-RE-BYD
-
 ## Move to MicroG-RE-BYD
 
 MicroG-RE-BYD is now the only supported provider for gmaps-patches. Please migrate from ReVanced GmsCore or upstream MicroG-RE to the [latest MicroG-RE-BYD release](https://github.com/fangkampanat/MicroG-RE-BYD/releases/latest).
