@@ -10,22 +10,28 @@ import app.morphe.patcher.patch.Compatibility
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.patch.resourcePatch
+import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
+import com.android.tools.smali.dexlib2.iface.Method
 import com.android.tools.smali.dexlib2.builder.BuilderInstruction
 import com.android.tools.smali.dexlib2.builder.instruction.BuilderInstruction21c
 import com.android.tools.smali.dexlib2.builder.instruction.BuilderInstruction31c
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.TwoRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.RegisterRangeInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.formats.Instruction21c
 import com.android.tools.smali.dexlib2.iface.instruction.formats.Instruction31c
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
+import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.StringReference
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableStringReference
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
+import java.util.logging.Logger
 
 private const val ORIGINAL_PACKAGE_NAME = "com.google.android.apps.maps"
 private const val PATCHED_PACKAGE_NAME = "app.morphe.android.apps.maps"
@@ -35,6 +41,11 @@ private const val ORIGINAL_CERT_SHA256_ANDROID_13_PLUS = "7ce83c1b71f3d572fed04c
 private const val GMS_CORE_PACKAGE_NAME = "app.revanced.android.gms"
 private const val GMS_CORE_VENDOR_GROUP = "app.revanced"
 private const val C2DM_PACKAGE_NAME = "app.revanced.android.c2dm"
+private const val MAIN_CLASS = "Lcom/google/android/maps/MapsActivity;"
+private const val MAPS_APPLICATION_CLASS = "Lcom/google/android/apps/gmm/base/app/GoogleMapsApplication;"
+private const val GOOGLE_API_CLIENT_BUILDER = "Lcom/google/android/gms/common/api/GoogleApiClient\$Builder;"
+private const val CONNECTION_RESULT_CLASS = "Lcom/google/android/gms/common/ConnectionResult;"
+private val logger = Logger.getLogger("app.morphe.patches.maps.GoogleMapsMicroGPatch")
 private const val EXTENSION_CLASS = "Lapp/morphe/extension/shared/patches/GmsCoreSupportPatch;"
 private const val UTILS_CLASS = "Lapp/morphe/extension/shared/Utils;"
 private const val BYD_AUDIO_CLASS =
@@ -45,18 +56,15 @@ private const val LOCATION_SERVICE_ACTION =
     "com.google.android.location.internal.GoogleLocationManagerService.START"
 
 private val compatibility = Compatibility(
-    name = "Google Maps",
+    name = "Google Maps Morphe",
     packageName = ORIGINAL_PACKAGE_NAME,
     apkFileType = ApkFileType.APK_REQUIRED,
     appIconColor = 0x4285F4,
     signatures = setOf(ORIGINAL_CERT_SHA256, ORIGINAL_CERT_SHA256_ANDROID_13_PLUS),
     targets = listOf(
         AppTarget(
-            version = "26.35.04.969485213",
-            minSdk = 28,
-        ),
-        AppTarget(
-            version = "26.36.05.973607363",
+            version = null,
+            isExperimental = false,
             minSdk = 28,
         ),
     ),
@@ -432,30 +440,6 @@ private fun app.morphe.patcher.patch.BytecodePatchContext.patchLocationServiceAc
     }
 }
 
-private fun mapsActivityOnCreateFingerprint(definingClass: String) = Fingerprint(
-    definingClass = definingClass,
-    name = "onCreate",
-    returnType = "V",
-    parameters = listOf("Landroid/os/Bundle;"),
-)
-
-private val mapsActivityOnCreateFingerprints = listOf(
-    mapsActivityOnCreateFingerprint("Lnbj;"),
-    mapsActivityOnCreateFingerprint("Lnce;"),
-)
-
-private fun mapsApplicationOnCreateFingerprint(definingClass: String) = Fingerprint(
-    definingClass = definingClass,
-    name = "onCreate",
-    returnType = "V",
-    parameters = listOf(),
-)
-
-private val mapsApplicationOnCreateFingerprints = listOf(
-    mapsApplicationOnCreateFingerprint("Lnrq;"),
-    mapsApplicationOnCreateFingerprint("Lnsj;"),
-)
-
 private val extensionVendorFingerprint = Fingerprint(
     definingClass = EXTENSION_CLASS,
     name = "getGmsCoreVendorGroupId",
@@ -479,18 +463,6 @@ private val serviceCheckFingerprint = Fingerprint(
     strings = listOf("Google Play Services not available"),
 )
 
-private fun googlePlayUtilityFingerprint(definingClass: String, name: String) = Fingerprint(
-    definingClass = definingClass,
-    name = name,
-    returnType = "I",
-    parameters = listOf("Landroid/content/Context;", "I"),
-)
-
-private val googlePlayUtilityFingerprints = listOf(
-    googlePlayUtilityFingerprint("Lbeha;", "o"),
-    googlePlayUtilityFingerprint("Lbekb;", "o"),
-)
-
 private val playServicesAvailabilityNotificationFingerprint = Fingerprint(
     returnType = "V",
     parameters = listOf(
@@ -505,10 +477,12 @@ private val mediaAlertFileFingerprint = Fingerprint(
         "MediaAlert file doesn't exist",
         "Exception creating MediaAlert from file",
     ),
+    custom = { method, _ -> method.hasAudioStreamCall() },
 )
 
 private val mediaAlertResourceFingerprint = Fingerprint(
     strings = listOf("Error loading sound file from resource"),
+    custom = { method, _ -> method.hasAudioStreamCall() },
 )
 
 private val mediaAlertAudioAttributesFingerprint = Fingerprint(
@@ -551,6 +525,49 @@ private val mediaAlertAudioAttributesFingerprint = Fingerprint(
 
 private fun Any.methodReferenceOrNull() =
     (this as? ReferenceInstruction)?.reference as? MethodReference
+
+private fun Method.hasAudioStreamCall() = implementation?.instructions?.any {
+    it.methodReferenceOrNull()?.matches(
+        "Landroid/media/MediaPlayer;", "setAudioStreamType", listOf("I"), "V",
+    ) == true
+} == true
+
+// Fingerprint.methodOrNull returns the first match. Scan individual methods so
+// duplicated strings or method shapes cannot silently select a different hook.
+private fun app.morphe.patcher.patch.BytecodePatchContext.uniqueMapsHook(
+    fingerprint: Fingerprint,
+    label: String,
+    required: Boolean = true,
+): MutableMethod? {
+    var found: Method? = null
+    classDefForEach { classDef ->
+        if (!classDef.type.startsWith("Lapp/morphe/extension/")) {
+            classDef.methods.forEach { method ->
+                fingerprint.clearMatch()
+                if (fingerprint.matchOrNull(method, classDef) != null) {
+                    if (found != null) {
+                        throw PatchException("Ambiguous $label: $found and $method")
+                    }
+                    if (method.implementation == null) {
+                        throw PatchException("Missing implementation for $label: $method")
+                    }
+                    found = method
+                }
+            }
+        }
+    }
+    fingerprint.clearMatch()
+    val method = found ?: run {
+        if (required) throw PatchException("Failed to match $label")
+        logger.info("Optional $label not found; skipping this hook")
+        return null
+    }
+    logger.info("Resolved $label: $method")
+    return mutableClassDefBy(method.definingClass).methods.single {
+        it.name == method.name && it.returnType == method.returnType &&
+            it.parameterTypes == method.parameterTypes
+    }
+}
 
 private fun MethodReference.matches(
     definingClass: String,
@@ -611,8 +628,7 @@ private fun app.morphe.patcher.patch.BytecodePatchContext.patchBydNavigationAudi
         "file MediaAlert" to mediaAlertFileFingerprint,
         "resource MediaAlert" to mediaAlertResourceFingerprint,
     ).forEach { (label, fingerprint) ->
-        val method = fingerprint.methodOrNull
-            ?: throw PatchException("Failed to match $label audio stream hook")
+        val method = uniqueMapsHook(fingerprint, "$label audio stream hook")!!
         val matches = method.implementation!!.instructions.withIndex().filter { (_, instruction) ->
             instruction.methodReferenceOrNull()?.matches(
                 "Landroid/media/MediaPlayer;",
@@ -630,8 +646,9 @@ private fun app.morphe.patcher.patch.BytecodePatchContext.patchBydNavigationAudi
         method.replaceInstruction(index, audioStreamWrapperInvoke(instruction))
     }
 
-    val attributesMethod = mediaAlertAudioAttributesFingerprint.methodOrNull
-        ?: throw PatchException("Failed to match MediaAlert AudioAttributes hook")
+    val attributesMethod = uniqueMapsHook(
+        mediaAlertAudioAttributesFingerprint, "MediaAlert AudioAttributes hook",
+    )!!
     val attributeMatches = attributesMethod.implementation!!.instructions.withIndex()
         .filter { (_, instruction) ->
             instruction.methodReferenceOrNull()?.matches(
@@ -676,11 +693,72 @@ private fun app.morphe.patcher.patch.BytecodePatchContext.patchExtensionRuntime(
     )
 }
 
-private fun app.morphe.patcher.patch.BytecodePatchContext.patchAvailabilityChecks() {
-    serviceCheckFingerprint.methodOrNull?.addInstruction(0, "return-void")
+// PR #7 (Harvey843): resolve obfuscated classes through stable entry points.
+// Search the nearest declaring superclass, reject ambiguous or non-instance hooks,
+// and never continue into Android framework classes.
+private fun app.morphe.patcher.patch.BytecodePatchContext.findSuperclassHook(
+    childClass: String,
+    label: String,
+    predicate: (Method) -> Boolean,
+): MutableMethod {
+    var className = classDefByOrNull(childClass)?.superclass
+        ?: throw PatchException("Missing $label superclass: $childClass")
+    val visited = mutableSetOf(childClass)
+    while (!className.startsWith("Landroid/") && !className.startsWith("Ljava/")) {
+        if (!visited.add(className)) {
+            throw PatchException("Cycle in $label hierarchy: $className")
+        }
+        val classDef = classDefByOrNull(className) ?: break
+        val matches = classDef.methods.filter(predicate)
+        if (matches.isNotEmpty()) {
+            if (matches.size != 1) {
+                throw PatchException("Ambiguous $label in $className: ${matches.joinToString()}")
+            }
+            val match = matches.single()
+            if (AccessFlags.STATIC.isSet(match.accessFlags) ||
+                AccessFlags.PRIVATE.isSet(match.accessFlags) || match.implementation == null
+            ) {
+                throw PatchException("Expected a concrete instance $label: $match")
+            }
+            return mutableClassDefBy(className).methods.single {
+                it.name == match.name && it.returnType == match.returnType &&
+                    it.parameterTypes == match.parameterTypes
+            }
+        }
+        className = classDef.superclass ?: break
+    }
+    throw PatchException("Failed to find $label above $childClass; inspected ${visited.joinToString()}")
+}
 
-    val method = googlePlayUtilityFingerprints.firstNotNullOfOrNull { it.methodOrNull }
-        ?: throw PatchException("Failed to match Google Play services availability")
+private fun app.morphe.patcher.patch.BytecodePatchContext.patchAvailabilityChecks() {
+    uniqueMapsHook(serviceCheckFingerprint, "legacy Play services check", required = false)
+        ?.addInstruction(0, "return-void")
+
+    val builder = classDefByOrNull(GOOGLE_API_CLIENT_BUILDER)
+        ?: throw PatchException("Failed to find Google API Client builder")
+    val testingMethods = builder.methods.filter {
+        it.name == "setApiAvailabilityForTesting" && it.returnType == GOOGLE_API_CLIENT_BUILDER
+    }
+    if (testingMethods.size != 1) {
+        throw PatchException("Expected one setApiAvailabilityForTesting method, found ${testingMethods.size}")
+    }
+    val testingMethod = testingMethods.single()
+    val availabilityClass = testingMethod.parameterTypes.singleOrNull()?.toString()
+        ?: throw PatchException("Unexpected availability testing parameters: $testingMethod")
+    val parameters = listOf("Landroid/content/Context;", "I")
+    val method = findSuperclassHook(availabilityClass, "Google Play services availability") {
+        it.returnType == "I" && it.parameterTypes.map { type -> type.toString() } == parameters
+    }
+    // The inspected availability wrapper delegates its Context/version check to
+    // an integer-returning utility. Do not replace a signature-only match.
+    val delegates = method.implementation!!.instructions.filter {
+        it.opcode == Opcode.INVOKE_STATIC || it.opcode == Opcode.INVOKE_STATIC_RANGE
+    }.mapNotNull { it.methodReferenceOrNull() }.filter {
+        it.returnType == "I" && it.parameterTypes.map { type -> type.toString() } == parameters
+    }
+    if (delegates.size != 1 || method.implementation!!.registerCount < 1) {
+        throw PatchException("Unexpected availability wrapper: $method; integer delegates=${delegates.size}")
+    }
 
     method.addInstructions(
         0,
@@ -691,14 +769,80 @@ private fun app.morphe.patcher.patch.BytecodePatchContext.patchAvailabilityCheck
     )
 }
 
+private fun Any.invokeRegisters(): List<Int>? = when (this) {
+    is FiveRegisterInstruction ->
+        listOf(registerC, registerD, registerE, registerF, registerG).take(registerCount)
+    is RegisterRangeInstruction -> (startRegister until startRegister + registerCount).toList()
+    else -> null
+}
+
+private fun app.morphe.patcher.patch.BytecodePatchContext.connectionResultErrorField(): FieldReference {
+    val classDef = classDefByOrNull(CONNECTION_RESULT_CLASS)
+        ?: throw PatchException("Missing ConnectionResult")
+    val method = classDef.methods.singleOrNull {
+        it.name == "toString" && it.parameterTypes.isEmpty() && it.returnType == "Ljava/lang/String;"
+    } ?: throw PatchException("Expected one ConnectionResult.toString")
+    val implementation = method.implementation
+        ?: throw PatchException("Missing ConnectionResult.toString implementation")
+    if (AccessFlags.STATIC.isSet(method.accessFlags)) {
+        throw PatchException("Expected instance ConnectionResult.toString")
+    }
+    val instructions = implementation.instructions.filter { it.opcode != Opcode.NOP }
+    val anchors = instructions.indices.filter { stringReferenceOf(instructions[it])?.string == "statusCode" }
+    val index = anchors.singleOrNull()
+        ?: throw PatchException("Expected one ConnectionResult statusCode label, found ${anchors.size}")
+    if (index < 1 || index + 3 >= instructions.size) {
+        throw PatchException("Unexpected ConnectionResult statusCode layout")
+    }
+    val read = instructions[index - 1]
+    val label = instructions[index]
+    val format = instructions[index + 1]
+    val result = instructions[index + 2]
+    val append = instructions[index + 3]
+    val field = (read as? ReferenceInstruction)?.reference as? FieldReference
+    val readRegisters = read as? TwoRegisterInstruction
+    val labelRegister = (label as? OneRegisterInstruction)?.registerA
+    val resultRegister = (result as? OneRegisterInstruction)?.registerA
+    val staticInvokes = setOf(Opcode.INVOKE_STATIC, Opcode.INVOKE_STATIC_RANGE)
+    // Follow the value into statusCode's formatter and labelled output, instead
+    // of assuming that the obfuscated integer field is always named "c".
+    if (read.opcode != Opcode.IGET || field?.definingClass != CONNECTION_RESULT_CLASS ||
+        field.type != "I" || readRegisters?.registerB != implementation.registerCount - 1 ||
+        format.opcode !in staticInvokes || format.invokeRegisters() != listOf(readRegisters.registerA) ||
+        format.methodReferenceOrNull()?.let {
+            it.definingClass == CONNECTION_RESULT_CLASS && it.parameterTypes.map { type -> type.toString() } == listOf("I") &&
+                it.returnType == "Ljava/lang/String;"
+        } != true || result.opcode != Opcode.MOVE_RESULT_OBJECT ||
+        append.opcode !in staticInvokes || append.invokeRegisters()?.take(2) != listOf(labelRegister, resultRegister) ||
+        append.methodReferenceOrNull()?.let {
+            it.parameterTypes.map { type -> type.toString() } ==
+                listOf("Ljava/lang/String;", "Ljava/lang/Object;", "Ljava/util/List;") && it.returnType == "V"
+        } != true
+    ) {
+        throw PatchException("Cannot prove ConnectionResult statusCode field from its value flow")
+    }
+    val declaration = classDef.fields.singleOrNull { it.name == field.name && it.type == field.type }
+        ?: throw PatchException("Missing declared ConnectionResult error field: $field")
+    if (!AccessFlags.PUBLIC.isSet(declaration.accessFlags) || AccessFlags.STATIC.isSet(declaration.accessFlags)) {
+        throw PatchException("ConnectionResult error field is not publicly readable: $field")
+    }
+    logger.info("Resolved ConnectionResult error field: $field")
+    return field
+}
+
 private fun app.morphe.patcher.patch.BytecodePatchContext.suppressMisleadingPlayServicesUpdateNotification() {
-    val method = playServicesAvailabilityNotificationFingerprint.methodOrNull
-        ?: throw PatchException("Failed to match Google Play services availability notification")
+    val method = uniqueMapsHook(
+        playServicesAvailabilityNotificationFingerprint, "Google Play services availability notification",
+    )!!
+    if (AccessFlags.STATIC.isSet(method.accessFlags) || method.implementation!!.registerCount < 5) {
+        throw PatchException("Unexpected notification hook registers or access: $method")
+    }
+    val errorField = connectionResultErrorField()
 
     method.addInstructions(
         0,
         """
-            iget v0, p2, Lcom/google/android/gms/common/ConnectionResult;->c:I
+            iget v0, p2, $errorField
             const/4 v1, 0x2
             if-ne v0, v1, :show_notification
             return-void
@@ -709,8 +853,9 @@ private fun app.morphe.patcher.patch.BytecodePatchContext.suppressMisleadingPlay
 }
 
 private fun app.morphe.patcher.patch.BytecodePatchContext.injectExtensionContext() {
-    val method = mapsApplicationOnCreateFingerprints.firstNotNullOfOrNull { it.methodOrNull }
-        ?: throw PatchException("Failed to match Maps application onCreate")
+    val method = findSuperclassHook(MAPS_APPLICATION_CLASS, "Maps application onCreate") {
+        it.name == "onCreate" && it.returnType == "V" && it.parameterTypes.isEmpty()
+    }
 
     method.addInstruction(
         0,
@@ -719,8 +864,10 @@ private fun app.morphe.patcher.patch.BytecodePatchContext.injectExtensionContext
 }
 
 private fun app.morphe.patcher.patch.BytecodePatchContext.injectGmsCoreCheck() {
-    val method = mapsActivityOnCreateFingerprints.firstNotNullOfOrNull { it.methodOrNull }
-        ?: throw PatchException("Failed to match Maps activity onCreate")
+    val method = findSuperclassHook(MAIN_CLASS, "Maps activity onCreate") {
+        it.name == "onCreate" && it.returnType == "V" &&
+            it.parameterTypes.map { type -> type.toString() } == listOf("Landroid/os/Bundle;")
+    }
 
     method.addInstruction(
         0,

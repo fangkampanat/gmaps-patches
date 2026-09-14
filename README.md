@@ -15,15 +15,15 @@ Google Maps 26.36.05 and MicroG-RE-BYD 7.1.1-byd.5 on a BYD Dolphin.
 ## Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.1.0](https://github.com/fangkampanat/gmaps-patches/releases/tag/v1.1.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;1 patch total
+> **[v1.2.0](https://github.com/fangkampanat/gmaps-patches/releases/tag/v1.2.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;1 patch total
 <details open>
-<summary>📦 Google Maps&nbsp;&nbsp;•&nbsp;&nbsp;1 patch</summary>
+<summary>📦 Google Maps Morphe&nbsp;&nbsp;•&nbsp;&nbsp;1 patch</summary>
 <br>
 
 **🎯 Supported versions:**
 
-| 26.35.04.969485213 | 26.36.05.973607363 |
-| :---: | :---: |
+| Any version |
+| :---: |
 
 | 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
 |----------|----------------|-----------|
@@ -37,16 +37,20 @@ Google Maps 26.36.05 and MicroG-RE-BYD 7.1.1-byd.5 on a BYD Dolphin.
 
 - A computer with Java 21 or newer
 - The latest [Morphe Desktop](https://github.com/MorpheApp/morphe-desktop/releases/latest)
-- A clean Google Maps APK matching a version listed in the Patches list
+- A clean Google Maps APK for Android 9 or newer
+
+The patch accepts any Google Maps version. It stops if required hooks cannot be identified safely. Compatibility with every Maps release is not guaranteed; the recorded runtime results below apply only to the listed versions and bundles.
 
 ## Tested devices and apps
 
-Tests used Maps `26.36.05.973607363` and MicroG-RE-BYD `7.1.1-byd.5`. The phone passed with the final `1.1.0` bundle. BYD testing used the preceding `1.0.13` bundle.
+Tests used Maps `26.36.05.973607363` and MicroG-RE-BYD `7.1.1-byd.5`. The phone passed with the final `1.2.0` bundle. BYD results remain from the earlier `1.0.13` bundle.
 
 | Device | Results |
 |---|---|
 | BYD Dolphin, DiLink 3.0 / Android 10 | Navigation and Maps use after vehicle restart passed user testing. |
-| Android phone with official Google Play services | Sign-in, online maps, GPS navigation and installation over the previous version passed. |
+| Android phone with official Google Play services | Fresh installation, sign-in, online maps and real-GPS navigation passed. Reinstalling the same APK preserved the account and app state. |
+
+Generic patch regression checks also covered Maps `26.29.02.946673643`, `26.35.04.969485213` and `26.37.05.977222275` beta. The local `1.1.2` bundle passed runtime tests on 26.29 and 26.37; 26.35 has static verification only. Release `1.2.0` retains the same patch and extension code.
 
 The tester also reported that existing Morphe-patched YouTube Music and YouTube apps work normally with MicroG-RE-BYD.
 
@@ -54,7 +58,7 @@ One microG account-capability lookup logged `UNREGISTERED_ON_API_CONSOLE` during
 
 ## Install MicroG-RE-BYD
 
-For gmaps-patches 1.1.0, replace ReVanced GmsCore or upstream MicroG-RE with MicroG-RE-BYD. Older patch releases retain their original requirements.
+For gmaps-patches 1.1.0 and newer, replace ReVanced GmsCore or upstream MicroG-RE with MicroG-RE-BYD. Older patch releases retain their original requirements.
 
 1. Download the signed `arm64-v8a` APK from the [latest MicroG-RE-BYD release](https://github.com/fangkampanat/MicroG-RE-BYD/releases/latest).
 2. If Android rejects an update from another provider because the signing key differs, uninstall that provider first. This removes its accounts and settings, so you will need to sign in again. **Keep official Google Play services installed.**
@@ -81,9 +85,11 @@ For gmaps-patches 1.1.0, replace ReVanced GmsCore or upstream MicroG-RE with Mic
 
 1. Confirm this repository's name and Stable bundle version appear at the top center of the Home screen.
 2. Drop a clean, supported Google Maps APK onto **Drop APK here**, or click that area to browse for the file.
-3. After the APK loads, confirm the screen shows **Google Maps** and **PATCHES 1 enabled**.
+3. After the APK loads, confirm the screen shows **Google Maps Morphe** and **PATCHES 1 enabled**.
 4. Click **PATCH WITH DEFAULTS**.
 5. When patching finishes, install the resulting APK on the target device.
+
+From bundle 1.2.0, Morphe Desktop uses `Google Maps Morphe` as the app name in its patching interface and output filenames, such as `Google-Maps-Morphe-26.36.05.973607363-patches-1.2.0.apk`. The installed app name is unchanged.
 
 ## Troubleshooting
 
@@ -100,6 +106,7 @@ The script finds the Morphe Desktop JAR automatically and applies the `en-US` lo
 ## Credits
 
 - [Morphe](https://github.com/MorpheApp) for Morphe Desktop, patching tools, and the upstream patch code this project builds upon.
+- [Harvey843](https://github.com/Harvey843) for the generic Maps hook lookup introduced in [PR #7](https://github.com/fangkampanat/gmaps-patches/pull/7).
 
 ## Notes
 
