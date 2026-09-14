@@ -35,6 +35,9 @@ private const val ORIGINAL_CERT_SHA256_ANDROID_13_PLUS = "7ce83c1b71f3d572fed04c
 private const val GMS_CORE_PACKAGE_NAME = "app.revanced.android.gms"
 private const val GMS_CORE_VENDOR_GROUP = "app.revanced"
 private const val C2DM_PACKAGE_NAME = "app.revanced.android.c2dm"
+private const val MAIN_CLASS = "Lcom/google/android/maps/MapsActivity;"
+private const val MAPS_APPLICATION_CLASS = "Lcom/google/android/apps/gmm/base/app/GoogleMapsApplication;"
+private const val GOOGLE_API_CLIENT_BUILDER = "Lcom/google/android/gms/common/api/GoogleApiClient\$Builder;"
 private const val EXTENSION_CLASS = "Lapp/morphe/extension/shared/patches/GmsCoreSupportPatch;"
 private const val UTILS_CLASS = "Lapp/morphe/extension/shared/Utils;"
 private const val BYD_AUDIO_CLASS =
@@ -432,30 +435,6 @@ private fun app.morphe.patcher.patch.BytecodePatchContext.patchLocationServiceAc
     }
 }
 
-private fun mapsActivityOnCreateFingerprint(definingClass: String) = Fingerprint(
-    definingClass = definingClass,
-    name = "onCreate",
-    returnType = "V",
-    parameters = listOf("Landroid/os/Bundle;"),
-)
-
-private val mapsActivityOnCreateFingerprints = listOf(
-    mapsActivityOnCreateFingerprint("Lnbj;"),
-    mapsActivityOnCreateFingerprint("Lnce;"),
-)
-
-private fun mapsApplicationOnCreateFingerprint(definingClass: String) = Fingerprint(
-    definingClass = definingClass,
-    name = "onCreate",
-    returnType = "V",
-    parameters = listOf(),
-)
-
-private val mapsApplicationOnCreateFingerprints = listOf(
-    mapsApplicationOnCreateFingerprint("Lnrq;"),
-    mapsApplicationOnCreateFingerprint("Lnsj;"),
-)
-
 private val extensionVendorFingerprint = Fingerprint(
     definingClass = EXTENSION_CLASS,
     name = "getGmsCoreVendorGroupId",
@@ -477,18 +456,6 @@ private val serviceCheckFingerprint = Fingerprint(
     returnType = "V",
     parameters = listOf("L", "I"),
     strings = listOf("Google Play Services not available"),
-)
-
-private fun googlePlayUtilityFingerprint(definingClass: String, name: String) = Fingerprint(
-    definingClass = definingClass,
-    name = name,
-    returnType = "I",
-    parameters = listOf("Landroid/content/Context;", "I"),
-)
-
-private val googlePlayUtilityFingerprints = listOf(
-    googlePlayUtilityFingerprint("Lbeha;", "o"),
-    googlePlayUtilityFingerprint("Lbekb;", "o"),
 )
 
 private val playServicesAvailabilityNotificationFingerprint = Fingerprint(
@@ -679,7 +646,22 @@ private fun app.morphe.patcher.patch.BytecodePatchContext.patchExtensionRuntime(
 private fun app.morphe.patcher.patch.BytecodePatchContext.patchAvailabilityChecks() {
     serviceCheckFingerprint.methodOrNull?.addInstruction(0, "return-void")
 
-    val method = googlePlayUtilityFingerprints.firstNotNullOfOrNull { it.methodOrNull }
+    val googleApiClientBuilderClass = classDefByOrNull(GOOGLE_API_CLIENT_BUILDER)
+        ?: throw PatchException("Failed to find Google API Client class")
+    val testingMethod = googleApiClientBuilderClass.methods.find { method ->
+        method.returnType == GOOGLE_API_CLIENT_BUILDER &&
+                method.name == "setApiAvailabilityForTesting"
+    } ?: throw PatchException("Failed to find setApiAvailabilityForTesting method")
+    val childClassName = testingMethod.parameterTypes.firstOrNull()
+        ?: throw PatchException("Failed to find parent of Google Play services availability")
+    val definingClass = classDefByOrNull(childClassName.toString())?.superclass
+        ?: throw PatchException("Failed to find Google Play services class")
+    val googlePlayUtilityFingerprint = Fingerprint(
+        definingClass = definingClass,
+        returnType = "I",
+        parameters = listOf("Landroid/content/Context;", "I"),
+    )
+    val method = googlePlayUtilityFingerprint.methodOrNull
         ?: throw PatchException("Failed to match Google Play services availability")
 
     method.addInstructions(
@@ -709,7 +691,15 @@ private fun app.morphe.patcher.patch.BytecodePatchContext.suppressMisleadingPlay
 }
 
 private fun app.morphe.patcher.patch.BytecodePatchContext.injectExtensionContext() {
-    val method = mapsApplicationOnCreateFingerprints.firstNotNullOfOrNull { it.methodOrNull }
+    val definingClass = classDefByOrNull(MAPS_APPLICATION_CLASS)?.superclass
+        ?: throw PatchException("Failed to find Maps application superclass")
+    val mapsApplicationOnCreateFingerprint = Fingerprint(
+        definingClass = definingClass,
+        name = "onCreate",
+        returnType = "V",
+        parameters = listOf(),
+    )
+    val method = mapsApplicationOnCreateFingerprint.methodOrNull
         ?: throw PatchException("Failed to match Maps application onCreate")
 
     method.addInstruction(
@@ -719,7 +709,15 @@ private fun app.morphe.patcher.patch.BytecodePatchContext.injectExtensionContext
 }
 
 private fun app.morphe.patcher.patch.BytecodePatchContext.injectGmsCoreCheck() {
-    val method = mapsActivityOnCreateFingerprints.firstNotNullOfOrNull { it.methodOrNull }
+    val definingClass = classDefByOrNull(MAIN_CLASS)?.superclass
+        ?: throw PatchException("Failed to find Maps activity superclass")
+    val mapsActivityOnCreateFingerprint = Fingerprint(
+        definingClass = definingClass,
+        name = "onCreate",
+        returnType = "V",
+        parameters = listOf("Landroid/os/Bundle;"),
+    )
+    val method = mapsActivityOnCreateFingerprint.methodOrNull
         ?: throw PatchException("Failed to match Maps activity onCreate")
 
     method.addInstruction(
