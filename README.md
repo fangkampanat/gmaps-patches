@@ -8,6 +8,10 @@ MicroG-RE-BYD improves sign-in and location support on BYD head units. It also w
 
 This repository provides `.mpp` patch bundles. You need your own Google Maps APK.
 
+![MicroG-RE-BYD 7.1.1-byd.5 and Google Maps 26.36.05 on a BYD Dolphin head unit](docs/images/byd-maps-microg-re-byd.png)
+
+Google Maps 26.36.05 and MicroG-RE-BYD 7.1.1-byd.5 on a BYD Dolphin. The microG About screen still shows its upstream name and icon.
+
 ## Patches list
 
 <!-- PATCHES_START EXPANDED -->
