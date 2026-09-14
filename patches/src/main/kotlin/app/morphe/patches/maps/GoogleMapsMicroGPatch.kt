@@ -39,6 +39,10 @@ private const val EXTENSION_CLASS = "Lapp/morphe/extension/shared/patches/GmsCor
 private const val UTILS_CLASS = "Lapp/morphe/extension/shared/Utils;"
 private const val BYD_AUDIO_CLASS =
     "Lapp/morphe/extension/maps/patches/BydNavigationAudioPatch;"
+private const val LOCATION_SERVICE_CLASS =
+    "Lapp/morphe/extension/maps/patches/LocationServicePatch;"
+private const val LOCATION_SERVICE_ACTION =
+    "com.google.android.location.internal.GoogleLocationManagerService.START"
 
 private val compatibility = Compatibility(
     name = "Google Maps",
@@ -48,11 +52,11 @@ private val compatibility = Compatibility(
     signatures = setOf(ORIGINAL_CERT_SHA256, ORIGINAL_CERT_SHA256_ANDROID_13_PLUS),
     targets = listOf(
         AppTarget(
-            version = "26.33.02.961351034",
+            version = "26.35.04.969485213",
             minSdk = 28,
         ),
         AppTarget(
-            version = "26.35.04.969485213",
+            version = "26.36.05.973607363",
             minSdk = 28,
         ),
     ),
@@ -68,8 +72,8 @@ private val manifestPatch = resourcePatch {
 
 @Suppress("unused")
 val googleMapsMicroGPatch = bytecodePatch(
-    name = "Google Maps for ReVanced GmsCore",
-    description = "Routes supported Google Maps builds through ReVanced GmsCore using the patched Maps package and known Google Maps certificate spoof metadata.",
+    name = "Google Maps for MicroG-RE-BYD",
+    description = "Connects supported Google Maps builds to MicroG-RE-BYD, with BYD navigation audio and compatibility with devices that also have official Google Play services.",
     default = true,
 ) {
     compatibleWith(compatibility)
@@ -78,6 +82,7 @@ val googleMapsMicroGPatch = bytecodePatch(
 
     execute {
         rewriteGmsCoreStrings()
+        patchLocationServiceAction()
         patchExtensionRuntime()
         patchAvailabilityChecks()
         suppressMisleadingPlayServicesUpdateNotification()
@@ -307,58 +312,6 @@ private fun Element.directChildren(tagName: String): List<Element> {
     return result
 }
 
-private val exactGmsRoutes = """
-com.google.android.c2dm.intent.RECEIVE
-com.google.android.c2dm.intent.REGISTER
-com.google.android.c2dm.intent.REGISTRATION
-com.google.android.c2dm.permission.RECEIVE
-com.google.android.c2dm.permission.SEND
-com.google.android.contextmanager.service.ContextManagerService.START
-com.google.android.gms
-com.google.android.gms.audit.service.START
-com.google.android.gms.auth.GOOGLE_SIGN_IN
-com.google.android.gms.auth.accounts
-com.google.android.gms.auth.api.credentials.service.START
-com.google.android.gms.auth.api.signin.service.START
-com.google.android.gms.auth.service.START
-com.google.android.gms.chimera
-com.google.android.gms.clearcut.service.START
-com.google.android.gms.common.service.START
-com.google.android.gms.common.telemetry.service.START
-com.google.android.gms.droidguard.service.START
-com.google.android.gms.facs.cache.service.START
-com.google.android.gms.feedback.internal.IFeedbackService
-com.google.android.gms.fonts
-com.google.android.gms.gmscompliance.service.START
-com.google.android.gms.googlehelp.HELP
-com.google.android.gms.googlehelp.service.GoogleHelpService.START
-com.google.android.gms.icing.LIGHTWEIGHT_INDEX_SERVICE
-com.google.android.gms.inappreach.service.START
-com.google.android.gms.location.reporting.service.START
-com.google.android.gms.location.settings.LOCATION_HISTORY
-com.google.android.gms.locationsharingreporter.service.START
-com.google.android.gms.people.service.START
-com.google.android.gms.permission.CAR_SPEED
-com.google.android.gms.phenotype
-com.google.android.gms.phenotype.service.START
-com.google.android.gms.pseudonymous.service.START
-com.google.android.gms.semanticlocation.service.START_ODLH
-com.google.android.gms.signin.service.START
-com.google.android.gms.social.location.activity.service.START
-com.google.android.gms.udc.service.START
-com.google.android.gms.usagereporting.service.START
-com.google.android.gms.wearable.BIND
-com.google.android.gms.wearable.BIND_LISTENER
-com.google.android.gms.wearable.DATA_CHANGED
-com.google.android.gms.wearable.MESSAGE_RECEIVED
-com.google.android.gms.wearable.NODE_CHANGED
-com.google.android.gsf.action.GET_GLS
-com.google.android.mobstore.service.START
-com.google.android.providers.gsf.permission.READ_GSERVICES
-com.google.firebase.dynamiclinks.service.START
-com.google.iid.TOKEN_REQUEST
-""".trimIndent().lines().toSet()
-
 private val exactStringReplacements = mapOf(
     "com.google" to GMS_CORE_VENDOR_GROUP,
     "subscribedfeeds" to "$GMS_CORE_VENDOR_GROUP.subscribedfeeds",
@@ -379,16 +332,12 @@ private val exactGmsRouteReplacements = mapOf(
 )
 
 private fun transformString(value: String): String? {
-    val transformed = exactStringReplacements[value] ?: when (value) {
-        in exactGmsRoutes -> value.toRevancedRoute()
-        else -> value.toRevancedContentUriRoute()
-    }
+    val transformed = exactStringReplacements[value]
+        ?: exactGmsRouteReplacements[value]
+        ?: value.toRevancedContentUriRoute()
 
     return transformed.takeIf { it != value }
 }
-
-private fun String.toRevancedRoute() =
-    exactGmsRouteReplacements[this] ?: this
 
 private fun String.toRevancedContentUriRoute(): String = when {
     startsWith("content://com.google.android.gms.phenotype") ->
@@ -446,6 +395,43 @@ private fun app.morphe.patcher.patch.BytecodePatchContext.rewriteGmsCoreStrings(
     }
 }
 
+private fun app.morphe.patcher.patch.BytecodePatchContext.patchLocationServiceAction() {
+    // Both inspected targets have two action getters with exactly const-string/return-object.
+    // Match the protocol literal and method shape rather than a version-specific class name.
+    val methods = getAllClassesWithStrings()
+        .filterNot { it.type.startsWith("Lapp/morphe/extension/") }
+        .flatMap { mutableClassDefBy(it).methods }
+        .filter { method ->
+            method.returnType == "Ljava/lang/String;" && method.parameterTypes.isEmpty() &&
+                method.implementation?.instructions?.any {
+                    stringReferenceOf(it)?.string == LOCATION_SERVICE_ACTION
+                } == true
+        }.toList()
+    if (methods.size != 2) {
+        throw PatchException("Expected two Maps location action getters, found ${methods.size}")
+    }
+    methods.forEach { method ->
+        val instructions = method.implementation!!.instructions.toList()
+        val register = when (val first = instructions.first()) {
+            is Instruction21c -> first.registerA
+            is Instruction31c -> first.registerA
+            else -> throw PatchException("Unexpected Maps location action instruction")
+        }
+        if (instructions.size != 2 ||
+            stringReferenceOf(instructions.first())?.string != LOCATION_SERVICE_ACTION ||
+            instructions.last().opcode != Opcode.RETURN_OBJECT ||
+            (instructions.last() as? com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction)
+                ?.registerA != register
+        ) {
+            throw PatchException("Unexpected Maps location action getter shape")
+        }
+        method.replaceInstruction(
+            0, "invoke-static {}, $LOCATION_SERVICE_CLASS->getServiceAction()Ljava/lang/String;",
+        )
+        method.addInstruction(1, "move-result-object v$register")
+    }
+}
+
 private fun mapsActivityOnCreateFingerprint(definingClass: String) = Fingerprint(
     definingClass = definingClass,
     name = "onCreate",
@@ -454,8 +440,8 @@ private fun mapsActivityOnCreateFingerprint(definingClass: String) = Fingerprint
 )
 
 private val mapsActivityOnCreateFingerprints = listOf(
-    mapsActivityOnCreateFingerprint("Lnco;"),
     mapsActivityOnCreateFingerprint("Lnbj;"),
+    mapsActivityOnCreateFingerprint("Lnce;"),
 )
 
 private fun mapsApplicationOnCreateFingerprint(definingClass: String) = Fingerprint(
@@ -466,8 +452,8 @@ private fun mapsApplicationOnCreateFingerprint(definingClass: String) = Fingerpr
 )
 
 private val mapsApplicationOnCreateFingerprints = listOf(
-    mapsApplicationOnCreateFingerprint("Locr;"),
     mapsApplicationOnCreateFingerprint("Lnrq;"),
+    mapsApplicationOnCreateFingerprint("Lnsj;"),
 )
 
 private val extensionVendorFingerprint = Fingerprint(
@@ -493,7 +479,7 @@ private val serviceCheckFingerprint = Fingerprint(
     strings = listOf("Google Play Services not available"),
 )
 
-private fun googlePlayUtilityFingerprint(definingClass: String, name: String = "b") = Fingerprint(
+private fun googlePlayUtilityFingerprint(definingClass: String, name: String) = Fingerprint(
     definingClass = definingClass,
     name = name,
     returnType = "I",
@@ -501,8 +487,8 @@ private fun googlePlayUtilityFingerprint(definingClass: String, name: String = "
 )
 
 private val googlePlayUtilityFingerprints = listOf(
-    googlePlayUtilityFingerprint("Lbjxo;", "o"),
     googlePlayUtilityFingerprint("Lbeha;", "o"),
+    googlePlayUtilityFingerprint("Lbekb;", "o"),
 )
 
 private val playServicesAvailabilityNotificationFingerprint = Fingerprint(
