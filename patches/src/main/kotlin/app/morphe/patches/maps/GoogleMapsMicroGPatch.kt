@@ -44,7 +44,7 @@ private const val GMS_CORE_PACKAGE_NAME = "app.revanced.android.gms"
 private const val GMS_CORE_VENDOR_GROUP = "app.revanced"
 private const val C2DM_PACKAGE_NAME = "app.revanced.android.c2dm"
 private const val MAIN_CLASS = "Lcom/google/android/maps/MapsActivity;"
-private const val MAPS_APPLICATION_CLASS = "Lcom/google/android/apps/gmm/base/app/GoogleMapsApplication;"
+internal const val MAPS_APPLICATION_CLASS = "Lcom/google/android/apps/gmm/base/app/GoogleMapsApplication;"
 private const val GOOGLE_API_CLIENT_BUILDER = "Lcom/google/android/gms/common/api/GoogleApiClient\$Builder;"
 private const val CONNECTION_RESULT_CLASS = "Lcom/google/android/gms/common/ConnectionResult;"
 private val logger = Logger.getLogger("app.morphe.patches.maps.GoogleMapsMicroGPatch")
@@ -57,7 +57,7 @@ private const val LOCATION_SERVICE_CLASS =
 private const val LOCATION_SERVICE_ACTION =
     "com.google.android.location.internal.GoogleLocationManagerService.START"
 
-private val compatibility = Compatibility(
+internal val compatibility = Compatibility(
     name = "Google Maps Morphe",
     packageName = ORIGINAL_PACKAGE_NAME,
     apkFileType = ApkFileType.APK_REQUIRED,
@@ -698,7 +698,7 @@ private fun app.morphe.patcher.patch.BytecodePatchContext.patchExtensionRuntime(
 // PR #7 (Harvey843): resolve obfuscated classes through stable entry points.
 // Search the nearest declaring superclass, reject ambiguous or non-instance hooks,
 // and never continue into Android framework classes.
-private fun app.morphe.patcher.patch.BytecodePatchContext.findSuperclassHook(
+internal fun app.morphe.patcher.patch.BytecodePatchContext.findSuperclassHook(
     childClass: String,
     label: String,
     predicate: (Method) -> Boolean,

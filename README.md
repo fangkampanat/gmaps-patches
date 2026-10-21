@@ -11,13 +11,14 @@ This repository provides `.mpp` patch bundles. Supply a clean Google Maps APK to
 ## Patches list
 
 <!-- PATCHES_START -->
-[v1.2.3](https://github.com/fangkampanat/gmaps-patches/releases/tag/v1.2.3) · 1 patch
+[v1.3.1](https://github.com/fangkampanat/gmaps-patches/releases/tag/v1.3.1) · 2 patches
 
 Eligible versions: Any version.
 
-| Patch | Description |
-| --- | --- |
-| Google Maps for MicroG-RE | Connects supported Google Maps builds to MicroG-RE 7.2.1 and prefers synthesized navigation speech with the existing audio fallback. |
+| Patch | Description | Options |
+| --- | --- | --- |
+| BYD native battery experiment | Experimental: sends this BYD's battery and road-load model to Google through Maps' native EV route requests. Starts from the car's own average consumption, learns slowly from BMS energy/distance, and adds in-app vehicle settings. Native hooks inspected on Maps 26.41. Targets BYD DiLink 3; DiLink 5 unverified. | • Arrival battery during navigation |
+| Google Maps for MicroG-RE | Connects supported Google Maps builds to MicroG-RE 7.2.1 and prefers synthesized navigation speech with the existing audio fallback. |  |
 
 <!-- PATCHES_END -->
 
@@ -25,18 +26,18 @@ Eligible versions: Any version.
 
 - A computer with Java 21 or newer
 - The latest [Morphe Desktop](https://github.com/MorpheApp/morphe-desktop/releases/latest)
-- A clean Google Maps APK for Android 9 or newer
+- A clean Google Maps APK for Android 10 or newer
 - An ARM64 device with 4 KiB memory pages
 
 The patch accepts any Google Maps version. It stops if required hooks cannot be identified safely. Compatibility with every Maps release is not guaranteed; the recorded runtime results below apply only to the listed versions and bundles.
 
 ## Tested devices and apps
 
-The latest tested Maps version is `26.39.06.984891338`, patched with bundle `1.2.3`, using official MicroG-RE `7.2.1` and patched Google TTS `20260817.01_p0.966249458`.
+The latest tested Maps version is `26.41.04.993332563`, patched with bundle `1.3.1`, using official MicroG-RE `7.2.1` and patched Google TTS `20260817.01_p0.966249458`.
 
 | Device | Results |
 |---|---|
-| BYD Dolphin, DiLink 3.0 / Android 10 / 4 KiB pages | Static checks passed; the user confirmed normal use. |
+| BYD Dolphin, DiLink 3.0 / Android 10 / 4 KiB pages | Static checks and in-car testing passed. |
 
 Phone use with this provider, 16 KiB devices, English-script street-name maneuvers, automatic voice timing while driving, and Timeline recording and backup are outside the verified scope.
 
@@ -81,7 +82,7 @@ Use the official MorpheApp release listed below. Older patch releases retain the
 
 1. Confirm this repository's name and Stable bundle version appear at the top center of the Home screen.
 2. Drop a clean, supported Google Maps APK onto **Drop APK here**, or click that area to browse for the file.
-3. After the APK loads, confirm the screen shows **Google Maps Morphe** and **PATCHES 1 enabled**.
+3. After the APK loads, confirm the screen shows **Google Maps Morphe** and **Google Maps for MicroG-RE** is enabled. The native battery experiment is optional.
 4. Click **PATCH WITH DEFAULTS**.
 5. When patching finishes, install the resulting APK on the target device.
 
@@ -99,6 +100,24 @@ Use the official MorpheApp release listed below. Older patch releases retain the
 5. In Maps' navigation voice settings, select **Default (language)** for spoken street names.
 
 Explicit language selections can use prerecorded prompts.
+
+## BYD native battery experiment
+
+This optional patch sends the car's live battery level and an estimated road-load model to Maps' EV route requests, so Google shows the expected battery percentage at the destination. Google calculates the route and the estimate.
+
+![Patched Maps with MicroG-RE 7.2.1 on a BYD head unit, showing "32% on arrival" in route preview](docs/images/byd-battery-preview.jpg)
+
+Enable **Google Maps for MicroG-RE** and **BYD native battery experiment** when patching. Route preview shows the arrival percentage, and during navigation a battery icon with that percentage follows the ETA. With several stops, it shows the next stop.
+
+**Maps → Settings → Vehicle and battery**:
+
+- **Automatic** (default) starts from the car's average consumption and learns from drives of 10 km or more.
+- **Fixed** uses the consumption you enter.
+- **Manual A/B/C** sets the road-load coefficients and the capacity used below 10% SOC.
+
+Battery capacity is measured automatically above 50% SOC. Changes saved during navigation apply after it ends.
+
+The patch is inspected on Maps `26.41.04.993332563` and tested on a BYD Dolphin, DiLink 3.0. On other Maps versions patching may stop; disable this patch there. Other BYD models and DiLink 5.0 are untested.
 
 ## Troubleshooting
 
