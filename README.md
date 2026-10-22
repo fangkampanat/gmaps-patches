@@ -11,14 +11,14 @@ This repository provides `.mpp` patch bundles. Supply a clean Google Maps APK to
 ## Patches list
 
 <!-- PATCHES_START -->
-[v1.3.1](https://github.com/fangkampanat/gmaps-patches/releases/tag/v1.3.1) · 2 patches
+[v1.3.2](https://github.com/fangkampanat/gmaps-patches/releases/tag/v1.3.2) · 2 patches
 
 Eligible versions: Any version.
 
 | Patch | Description | Options |
 | --- | --- | --- |
 | BYD native battery experiment | Experimental: sends this BYD's battery and road-load model to Google through Maps' native EV route requests. Starts from the car's own average consumption, learns slowly from BMS energy/distance, and adds in-app vehicle settings. Native hooks inspected on Maps 26.41. Targets BYD DiLink 3; DiLink 5 unverified. | • Arrival battery during navigation |
-| Google Maps for MicroG-RE | Connects supported Google Maps builds to MicroG-RE 7.2.1 and prefers synthesized navigation speech with the existing audio fallback. |  |
+| Google Maps for MicroG-RE | Connects supported Google Maps builds to MicroG-RE 7.2.1, skips the uncertified-device screen, and prefers synthesized navigation speech with early Google TTS startup and the existing audio fallback. |  |
 
 <!-- PATCHES_END -->
 

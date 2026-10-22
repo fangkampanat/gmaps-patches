@@ -54,6 +54,8 @@ private const val BYD_AUDIO_CLASS =
     "Lapp/morphe/extension/maps/patches/BydNavigationAudioPatch;"
 private const val LOCATION_SERVICE_CLASS =
     "Lapp/morphe/extension/maps/patches/LocationServicePatch;"
+private const val TTS_WARMUP_CLASS =
+    "Lapp/morphe/extension/maps/patches/NavigationTtsWarmup;"
 private const val LOCATION_SERVICE_ACTION =
     "com.google.android.location.internal.GoogleLocationManagerService.START"
 
@@ -83,7 +85,7 @@ private val manifestPatch = resourcePatch {
 @Suppress("unused")
 val googleMapsMicroGPatch = bytecodePatch(
     name = "Google Maps for MicroG-RE",
-    description = "Connects supported Google Maps builds to MicroG-RE 7.2.1 and prefers synthesized navigation speech with the existing audio fallback.",
+    description = "Connects supported Google Maps builds to MicroG-RE 7.2.1, skips the uncertified-device screen, and prefers synthesized navigation speech with early Google TTS startup and the existing audio fallback.",
     default = true,
 ) {
     compatibleWith(compatibility)
@@ -98,8 +100,10 @@ val googleMapsMicroGPatch = bytecodePatch(
         suppressMisleadingPlayServicesUpdateNotification()
         patchBydNavigationAudio()
         patchNavigationTts()
+        patchDeviceComplianceCheck()
         injectExtensionContext()
         injectGmsCoreCheck()
+        injectNavigationTtsWarmup()
     }
 }
 
@@ -867,5 +871,17 @@ private fun app.morphe.patcher.patch.BytecodePatchContext.injectGmsCoreCheck() {
     method.addInstruction(
         0,
         "invoke-static/range { p0 .. p0 }, $EXTENSION_CLASS->checkGmsCore(Landroid/app/Activity;)V",
+    )
+}
+
+private fun app.morphe.patcher.patch.BytecodePatchContext.injectNavigationTtsWarmup() {
+    val method = findSuperclassHook(MAIN_CLASS, "Maps activity onCreate") {
+        it.name == "onCreate" && it.returnType == "V" &&
+            it.parameterTypes.map { type -> type.toString() } == listOf("Landroid/os/Bundle;")
+    }
+
+    method.addInstruction(
+        0,
+        "invoke-static/range { p0 .. p0 }, $TTS_WARMUP_CLASS->warmUp(Landroid/app/Activity;)V",
     )
 }
