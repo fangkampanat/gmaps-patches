@@ -4,6 +4,7 @@ import app.morphe.patcher.Fingerprint
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.BytecodePatchContext
 import app.morphe.patcher.patch.PatchException
+import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import app.morphe.patcher.util.getReference
 import com.android.tools.smali.dexlib2.AccessFlags
@@ -11,18 +12,20 @@ import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.Method
 import com.android.tools.smali.dexlib2.iface.instruction.*
 import com.android.tools.smali.dexlib2.iface.reference.*
+import java.util.logging.Logger
 
-private const val VEHICLE_SETTINGS = "Lapp/morphe/extension/maps/patches/BydVehicleSettings;"
+private const val SETTINGS_ROWS = "Lapp/morphe/extension/maps/patches/MapsSettingsRows;"
 private const val PREFERENCE = "Landroidx/preference/Preference;"
 private const val GROUP = "Landroidx/preference/PreferenceGroup;"
 private const val SCREEN = "Landroidx/preference/PreferenceScreen;"
+private val log = Logger.getLogger("app.morphe.patches.maps.MapsSettingsRows")
 private fun Instruction.settingsCall() = getReference<MethodReference>()
 private fun Instruction.settingsField() = getReference<FieldReference>()
 private fun settingsGuard(ok: Boolean, why: String, at: Any) {
-    if (!ok) throw PatchException("Unrecognized BYD vehicle settings layout: $why in $at")
+    if (!ok) throw PatchException("Unrecognized Maps Settings row layout: $why in $at")
 }
 private fun Method.settingsCode() = implementation?.instructions?.toList()
-    ?: throw PatchException("Missing BYD vehicle settings body: $this")
+    ?: throw PatchException("Missing Maps Settings row body: $this")
 private fun Method.settingsPublic() = AccessFlags.PUBLIC.isSet(accessFlags) && !AccessFlags.STATIC.isSet(accessFlags)
 
 /** Proof-only lookups must not normalize every method in an unrelated mutable class. */
@@ -42,11 +45,39 @@ private fun BytecodePatchContext.readOnlySettingsHook(fingerprint: Fingerprint, 
     return found ?: throw PatchException("Failed to match $label")
 }
 
-internal data class VehicleSettingsEntry(val method: MutableMethod, val schema: String, val size: Int,
+/**
+ * One attachment point in the main Maps Settings screens, shared by every patch that owns a row there.
+ * Each owner turns its own row on with [enableSettingsRow], so a row appears only when its patch is applied.
+ */
+internal val mapsSettingsRowsPatch = bytecodePatch {
+    dependsOn(googleMapsMicroGPatch)
+
+    execute {
+        val rows = resolveSettingsRows()
+        rows.inject()
+        log.info("Settings rows: methods=${rows.methods}; schemas=${rows.schemas}")
+    }
+}
+
+/** Make the extension's `<row>()` switch return true; it must still be the built `return false` body. */
+internal fun BytecodePatchContext.enableSettingsRow(row: String) {
+    val method = mutableClassDefBy(SETTINGS_ROWS).methods.singleOrNull {
+        it.name == row && it.parameterTypes.isEmpty() && it.returnType == "Z" && AccessFlags.STATIC.isSet(it.accessFlags)
+    } ?: throw PatchException("Missing Maps Settings row switch $row")
+    val code = method.settingsCode()
+    settingsGuard(code.map { it.opcode } == listOf(Opcode.CONST_4, Opcode.RETURN) &&
+        (code[0] as NarrowLiteralInstruction).narrowLiteral == 0 &&
+        (code[0] as OneRegisterInstruction).registerA == (code[1] as OneRegisterInstruction).registerA,
+        "row switch returns false", method)
+    method.replaceInstruction(0, "const/4 v${(code[0] as OneRegisterInstruction).registerA}, 0x1")
+    log.info("Settings rows: $row enabled")
+}
+
+internal data class SettingsRowEntry(val method: MutableMethod, val schema: String, val size: Int,
     val registers: Int, val receiver: Int, val exits: List<Int>)
 
 /** One real row in either server-selected main Settings screen; the selector is untouched. */
-internal class VehicleSettingsPlan(private val entries: List<VehicleSettingsEntry>) {
+internal class SettingsRowPlan(private val entries: List<SettingsRowEntry>) {
     val methods = entries.map { it.method }
     val schemas = entries.map { it.schema }
     val method get() = methods.first()
@@ -63,7 +94,7 @@ internal class VehicleSettingsPlan(private val entries: List<VehicleSettingsEntr
             entry.exits.sortedDescending().forEach { exit ->
                 checkedNativeInsert(entry.method, exit + 1, """
                     const-string v1, "${entry.schema}"
-                    invoke-static { v0, v1 }, $VEHICLE_SETTINGS->attach(Ljava/lang/Object;Ljava/lang/String;)V
+                    invoke-static { v0, v1 }, $SETTINGS_ROWS->attach(Ljava/lang/Object;Ljava/lang/String;)V
                     return-void
                 """.trimIndent(), listOf(Opcode.CONST_STRING, Opcode.INVOKE_STATIC, Opcode.RETURN_VOID))
                 entry.method.replaceInstruction(exit, "move-object/from16 v0, v${entry.receiver}")
@@ -82,7 +113,7 @@ internal class VehicleSettingsPlan(private val entries: List<VehicleSettingsEntr
 }
 
 /** Resolve obfuscated members from framework types, root keys and their actual value flows. */
-internal fun BytecodePatchContext.resolveVehicleSettings(): VehicleSettingsPlan {
+private fun BytecodePatchContext.resolveSettingsRows(): SettingsRowPlan {
     val legacy = readOnlySettingsHook(Fingerprint(returnType = "V", parameters = listOf("Landroid/os/Bundle;", "Ljava/lang/String;"),
         strings = listOf("accountIdAtCreation"), custom = { method, _ ->
             val code = method.implementation?.instructions?.toList().orEmpty()
@@ -118,10 +149,10 @@ internal fun BytecodePatchContext.resolveVehicleSettings(): VehicleSettingsPlan 
         choose[7].invokeRegisters() == listOf(1, 0) && choose[11].invokeRegisters() == listOf(1, 0) &&
         choose.take(4).sumOf { it.codeUnits } + (choose[4] as OffsetInstruction).codeOffset == choose.take(9).sumOf { it.codeUnits },
         "both roots selected by original flag and same navigator", selector)
-    return VehicleSettingsPlan(listOf(resolveVehicleSettingsEntry(legacy, false), resolveVehicleSettingsEntry(revamped, true)))
+    return SettingsRowPlan(listOf(resolveSettingsRowEntry(legacy, false), resolveSettingsRowEntry(revamped, true)))
 }
 
-private fun BytecodePatchContext.resolveVehicleSettingsEntry(root: Method, revamped: Boolean): VehicleSettingsEntry {
+private fun BytecodePatchContext.resolveSettingsRowEntry(root: Method, revamped: Boolean): SettingsRowEntry {
     val code = root.settingsCode()
     val receiver = code.firstOrNull() as? TwoRegisterInstruction
     val size = code.size
@@ -374,7 +405,7 @@ private fun BytecodePatchContext.resolveVehicleSettingsEntry(root: Method, revam
         add.name, find.name).joinToString("|")
     settingsGuard(schema.none { it == '"' || it == '\n' || it == '\r' }, "safe member schema", schema)
     val mutable = mutableClassDefBy(root.definingClass).methods.single { it.toString() == root.toString() }
-    return VehicleSettingsEntry(mutable, schema, size, registers, originalReceiver, exits)
+    return SettingsRowEntry(mutable, schema, size, registers, originalReceiver, exits)
 }
 
 /** Small, conservative CFG for the inspected Settings bodies; no switch/exception guesses. */
