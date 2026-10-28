@@ -11,14 +11,17 @@ This repository provides `.mpp` patch bundles. Supply a clean Google Maps APK to
 ## Patches list
 
 <!-- PATCHES_START -->
-[v1.4.2](https://github.com/fangkampanat/gmaps-patches/releases/tag/v1.4.2) · 3 patches
+[v1.4.3](https://github.com/fangkampanat/gmaps-patches/releases/tag/v1.4.3) · 6 patches
 
 Eligible versions: Any version.
 
 | Patch | Description | Options |
 | --- | --- | --- |
 | BYD native battery experiment | Experimental: sends this BYD's battery and road-load model to Google through Maps' native EV route requests. Starts from the car's own average consumption, learns slowly from BMS energy/distance, and adds in-app vehicle settings. Native hooks inspected on Maps 26.41 and 26.42. Targets BYD DiLink 3; DiLink 5 unverified. | • Arrival battery during navigation |
-| Google Maps for MicroG-RE | Connects supported Google Maps builds to MicroG-RE 7.2.2, skips the uncertified-device screen, avoids a crash when a location-settings dialog cannot open, and prefers synthesized navigation speech with early Google TTS startup and the existing audio fallback. |  |
+| BYD navigation audio routing | Routes navigation prompts to the BYD-specific audio stream when supported, retaining the original fallback. Not needed on phones. |  |
+| Device certification and service resolution fixes | Skips the unsupported-device certification screen and handles unavailable Play Services resolution dialogs. |  |
+| Google Maps for MicroG-RE | Core MicroG-RE Maps integration: package and manifest changes, service routing, header and signature compatibility, and required service hooks. |  |
+| Navigation speech and TTS startup | Improves synthesized navigation guidance and initializes the TTS engine early. Requires the MicroG Maps core. |  |
 | Picture-in-picture setting | Adds a Picture-in-picture On/Off setting to Maps Settings. Turn it off so navigation does not open a small window when you leave Maps; it starts on, as in Maps. Hooks inspected on Maps 26.41 and 26.42. |  |
 
 <!-- PATCHES_END -->
@@ -84,7 +87,7 @@ Use the official MorpheApp release listed below. Older patch releases retain the
 
 1. Confirm this repository's name and Stable bundle version appear at the top center of the Home screen.
 2. Drop a clean, supported Google Maps APK onto **Drop APK here**, or click that area to browse for the file.
-3. After the APK loads, confirm the screen shows **Google Maps Morphe** and **Google Maps for MicroG-RE** is enabled. The Picture-in-picture setting and the native battery experiment are optional.
+3. After the APK loads, confirm the screen shows **Google Maps Morphe** with these default patches enabled: **Google Maps for MicroG-RE**, **Device certification and service resolution fixes**, **Navigation speech and TTS startup**, and **BYD navigation audio routing**. The Picture-in-picture setting and the native battery experiment are optional.
 4. Click **PATCH WITH DEFAULTS**.
 5. When patching finishes, install the resulting APK on the target device.
 

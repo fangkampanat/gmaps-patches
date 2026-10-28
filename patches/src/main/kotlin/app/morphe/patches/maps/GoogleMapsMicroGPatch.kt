@@ -85,7 +85,7 @@ private val manifestPatch = resourcePatch {
 @Suppress("unused")
 val googleMapsMicroGPatch = bytecodePatch(
     name = "Google Maps for MicroG-RE",
-    description = "Connects supported Google Maps builds to MicroG-RE 7.2.2, skips the uncertified-device screen, avoids a crash when a location-settings dialog cannot open, and prefers synthesized navigation speech with early Google TTS startup and the existing audio fallback.",
+    description = "Core MicroG-RE Maps integration: package and manifest changes, service routing, header and signature compatibility, and required service hooks.",
     default = true,
 ) {
     compatibleWith(compatibility)
@@ -98,15 +98,10 @@ val googleMapsMicroGPatch = bytecodePatch(
         patchExtensionRuntime()
         patchAvailabilityChecks()
         suppressMisleadingPlayServicesUpdateNotification()
-        patchBydNavigationAudio()
-        patchNavigationTts()
-        patchDeviceComplianceCheck()
-        patchGmsResolutionStart()
         patchMapsIdentityHeaders()
         patchMapsSignatureSpoof()
         injectExtensionContext()
         injectGmsCoreCheck()
-        injectNavigationTtsWarmup()
     }
 }
 
@@ -632,7 +627,7 @@ private fun audioAttributesWrapperInvoke(instruction: Any): String = when (instr
     else -> throw PatchException("Unsupported MediaPlayer.setAudioAttributes instruction format")
 }
 
-private fun app.morphe.patcher.patch.BytecodePatchContext.patchBydNavigationAudio() {
+internal fun app.morphe.patcher.patch.BytecodePatchContext.patchBydNavigationAudio() {
     listOf(
         "file MediaAlert" to mediaAlertFileFingerprint,
         "resource MediaAlert" to mediaAlertResourceFingerprint,
@@ -877,7 +872,7 @@ private fun app.morphe.patcher.patch.BytecodePatchContext.injectGmsCoreCheck() {
     )
 }
 
-private fun app.morphe.patcher.patch.BytecodePatchContext.injectNavigationTtsWarmup() {
+internal fun app.morphe.patcher.patch.BytecodePatchContext.injectNavigationTtsWarmup() {
     val method = findSuperclassHook(MAIN_CLASS, "Maps activity onCreate") {
         it.name == "onCreate" && it.returnType == "V" &&
             it.parameterTypes.map { type -> type.toString() } == listOf("Landroid/os/Bundle;")
