@@ -19,9 +19,9 @@ Eligible versions: Any version.
 | --- | --- | --- |
 | BYD native battery experiment | Experimental: sends this BYD's battery and road-load model to Google through Maps' native EV route requests. Starts from the car's own average consumption, learns slowly from BMS energy/distance, and adds in-app vehicle settings. Native hooks inspected on Maps 26.41 and 26.42. Targets BYD DiLink 3; DiLink 5 unverified. | • Arrival battery during navigation |
 | BYD navigation audio routing | Routes navigation prompts to the BYD-specific audio stream when supported, retaining the original fallback. Not needed on phones. |  |
-| Device certification and service resolution fixes | Skips the unsupported-device certification screen and handles unavailable Play Services resolution dialogs. |  |
-| Google Maps for MicroG-RE | Core MicroG-RE Maps integration: package and manifest changes, service routing, header and signature compatibility, and required service hooks. |  |
-| Navigation speech and TTS startup | Improves synthesized navigation guidance and initializes the TTS engine early. Requires the MicroG Maps core. |  |
+| Device certification fix | Skips the uncertified-device screen that closes Maps on devices Google does not certify. |  |
+| Google Maps for MicroG-RE | Connects supported Google Maps builds to MicroG-RE 7.2.2 and avoids a crash when a location-settings dialog cannot open. |  |
+| Navigation speech and TTS startup | Prefers synthesized navigation speech, keeping the existing audio fallback, and starts Google TTS when Maps opens. |  |
 | Picture-in-picture setting | Adds a Picture-in-picture On/Off setting to Maps Settings. Turn it off so navigation does not open a small window when you leave Maps; it starts on, as in Maps. Hooks inspected on Maps 26.41 and 26.42. |  |
 
 <!-- PATCHES_END -->
@@ -41,7 +41,7 @@ The latest tested Maps version is `26.42.02.997557324`, patched in Morphe Deskto
 
 | Device | Results |
 |---|---|
-| Android 16 phone / 4 KiB pages | Bundle `1.4.2` on `26.42.02.997557324`: the Picture-in-picture setting passed. Bundle `1.4.1` on `26.42.01.997557324`: sign-in, use without an account, online maps, search, place details, routing, and Thai and English voice guidance passed. |
+| Android 16 phone / 4 KiB pages | Bundle `1.4.3` on `26.42.02.997557324` with the default patches: sign-in, online maps, location, routing, and Thai and English voice guidance passed. Bundle `1.4.2` on `26.42.02.997557324`: the Picture-in-picture setting passed. Bundle `1.4.1` on `26.42.01.997557324`: sign-in, use without an account, online maps, search, place details, routing, and Thai and English voice guidance passed. |
 | BYD Dolphin, DiLink 3.0 / Android 10 / 4 KiB pages | Bundle `1.4.2` on `26.42.02.997557324` with MicroG-RE `7.2.2`: the Picture-in-picture setting, route ETA, voice guidance and arrival battery passed. Bundle `1.4.0` on `26.41.04.993332563` with MicroG-RE `7.2.1` and patched Google TTS `20260817.01_p0.966249458`: static checks and in-car testing passed. |
 
 16 KiB devices, English-script street-name maneuvers, automatic voice timing while driving, and Timeline recording and backup are outside the verified scope.
@@ -87,7 +87,7 @@ Use the official MorpheApp release listed below. Older patch releases retain the
 
 1. Confirm this repository's name and Stable bundle version appear at the top center of the Home screen.
 2. Drop a clean, supported Google Maps APK onto **Drop APK here**, or click that area to browse for the file.
-3. After the APK loads, confirm the screen shows **Google Maps Morphe** with these default patches enabled: **Google Maps for MicroG-RE**, **Device certification and service resolution fixes**, **Navigation speech and TTS startup**, and **BYD navigation audio routing**. The Picture-in-picture setting and the native battery experiment are optional.
+3. After the APK loads, confirm the screen shows **Google Maps Morphe** with these default patches enabled: **Google Maps for MicroG-RE**, **Device certification fix** and **Navigation speech and TTS startup**. On a BYD head unit, also enable **BYD navigation audio routing**. The Picture-in-picture setting and the native battery experiment are optional.
 4. Click **PATCH WITH DEFAULTS**.
 5. When patching finishes, install the resulting APK on the target device.
 
@@ -110,7 +110,7 @@ Explicit language selections can use prerecorded prompts.
 
 This optional patch adds **Maps → Settings → Picture-in-picture**. Tap it and choose **On** or **Off** for Maps' small navigation window; it starts on. When it is off, leaving Maps during navigation does not open the window. This helps on head units that lack Android's own picture-in-picture setting.
 
-Enable **Google Maps for MicroG-RE** and **Picture-in-picture setting** when patching. The row appears only on devices that support picture-in-picture. The patch is inspected on Maps `26.41.04.993332563`, `26.42.01.997557324` and `26.42.02.997557324`, and tested on `26.42.02.997557324` on an Android 16 phone and a BYD Dolphin.
+Keep the default patches and enable **Picture-in-picture setting** when patching. The row appears only on devices that support picture-in-picture. The patch is inspected on Maps `26.41.04.993332563`, `26.42.01.997557324` and `26.42.02.997557324`, and tested on `26.42.02.997557324` on an Android 16 phone and a BYD Dolphin.
 
 ## BYD native battery experiment
 
@@ -118,7 +118,7 @@ This optional patch sends the car's live battery level and an estimated road-loa
 
 ![Patched Maps with MicroG-RE 7.2.1 on a BYD head unit, showing "32% on arrival" in route preview](docs/images/byd-battery-preview.jpg)
 
-Enable **Google Maps for MicroG-RE** and **BYD native battery experiment** when patching. Route preview shows the arrival percentage, and during navigation a battery icon with that percentage follows the ETA. With several stops, it shows the next stop.
+Keep the default patches and enable **BYD navigation audio routing** and **BYD native battery experiment** when patching. Route preview shows the arrival percentage, and during navigation a battery icon with that percentage follows the ETA. With several stops, it shows the next stop.
 
 **Maps → Settings → Vehicle and battery**:
 

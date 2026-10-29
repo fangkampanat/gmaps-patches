@@ -85,7 +85,7 @@ private val manifestPatch = resourcePatch {
 @Suppress("unused")
 val googleMapsMicroGPatch = bytecodePatch(
     name = "Google Maps for MicroG-RE",
-    description = "Core MicroG-RE Maps integration: package and manifest changes, service routing, header and signature compatibility, and required service hooks.",
+    description = "Connects supported Google Maps builds to MicroG-RE 7.2.2 and avoids a crash when a location-settings dialog cannot open.",
     default = true,
 ) {
     compatibleWith(compatibility)
@@ -98,6 +98,8 @@ val googleMapsMicroGPatch = bytecodePatch(
         patchExtensionRuntime()
         patchAvailabilityChecks()
         suppressMisleadingPlayServicesUpdateNotification()
+        // MicroG-RE requires this guard (issue #15), so it is not a separate patch.
+        patchGmsResolutionStart()
         patchMapsIdentityHeaders()
         patchMapsSignatureSpoof()
         injectExtensionContext()

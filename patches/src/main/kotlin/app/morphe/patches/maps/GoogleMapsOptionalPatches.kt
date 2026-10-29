@@ -3,15 +3,14 @@ package app.morphe.patches.maps
 import app.morphe.patcher.patch.bytecodePatch
 
 /**
- * Optional patches share the core's compatibility target and extension resources.
- *
- * The core must run first to inject the extension DEX and initialize MicroG support.
- * Keep these named patches independent so phones can omit BYD-specific changes.
+ * Patches split from the core so they can be selected individually; BYD audio routing is off
+ * by default because phones do not need it. They share the core's compatibility target and
+ * extension; the core runs first to inject the extension DEX and initialize MicroG support.
  */
 @Suppress("unused")
-val deviceCompatibilityPatch = bytecodePatch(
-    name = "Device certification and service resolution fixes",
-    description = "Skips the unsupported-device certification screen and handles unavailable Play Services resolution dialogs.",
+val deviceCertificationPatch = bytecodePatch(
+    name = "Device certification fix",
+    description = "Skips the uncertified-device screen that closes Maps on devices Google does not certify.",
     default = true,
 ) {
     compatibleWith(compatibility)
@@ -19,14 +18,13 @@ val deviceCompatibilityPatch = bytecodePatch(
 
     execute {
         patchDeviceComplianceCheck()
-        patchGmsResolutionStart()
     }
 }
 
 @Suppress("unused")
 val navigationSpeechPatch = bytecodePatch(
     name = "Navigation speech and TTS startup",
-    description = "Improves synthesized navigation guidance and initializes the TTS engine early. Requires the MicroG Maps core.",
+    description = "Prefers synthesized navigation speech, keeping the existing audio fallback, and starts Google TTS when Maps opens.",
     default = true,
 ) {
     compatibleWith(compatibility)
@@ -42,7 +40,7 @@ val navigationSpeechPatch = bytecodePatch(
 val bydNavigationAudioPatch = bytecodePatch(
     name = "BYD navigation audio routing",
     description = "Routes navigation prompts to the BYD-specific audio stream when supported, retaining the original fallback. Not needed on phones.",
-    default = true,
+    default = false,
 ) {
     compatibleWith(compatibility)
     dependsOn(googleMapsMicroGPatch)
