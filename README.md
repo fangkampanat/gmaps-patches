@@ -11,7 +11,7 @@ This repository provides `.mpp` patch bundles. Supply a clean Google Maps APK to
 ## Patches list
 
 <!-- PATCHES_START -->
-[v1.4.3](https://github.com/fangkampanat/gmaps-patches/releases/tag/v1.4.3) · 6 patches
+[v1.4.4](https://github.com/fangkampanat/gmaps-patches/releases/tag/v1.4.4) · 6 patches
 
 Eligible versions: Any version.
 
@@ -37,7 +37,7 @@ The patch accepts any Google Maps version. It stops if required hooks cannot be 
 
 ## Tested devices
 
-Bundle `1.4.3` with the default patches passed sign-in, online maps, location, routing, and Thai and English voice guidance on an Android 16 phone with Maps `26.42.02.997557324`, patched in Morphe Desktop `1.19.1`, with MicroG-RE `7.2.2`.
+Bundle `1.4.4` with the default patches passed sign-in, online maps, location, routing, and voice guidance on an Android 16 phone with Maps `26.43.00.1002020710`, patched in Morphe Desktop `1.19.1`, with MicroG-RE `7.2.2`.
 
 ## Install MicroG-RE
 
