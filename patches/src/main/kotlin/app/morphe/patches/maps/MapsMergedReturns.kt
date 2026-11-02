@@ -3,7 +3,6 @@ package app.morphe.patches.maps
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.Instruction
 import com.android.tools.smali.dexlib2.iface.instruction.OffsetInstruction
-import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 
 private val mergedReturnGotos = setOf(Opcode.GOTO, Opcode.GOTO_16, Opcode.GOTO_32)
 private val mergedReturnOpcodes = setOf(Opcode.RETURN, Opcode.RETURN_WIDE, Opcode.RETURN_OBJECT, Opcode.RETURN_VOID)
@@ -23,11 +22,5 @@ internal fun List<Instruction>.exitAt(index: Int): Instruction? {
     return get(target).takeIf { it.opcode in mergedReturnOpcodes }
 }
 
-/** Exit points through [opcode]: each such return plus each goto that reaches one directly. */
-internal fun List<Instruction>.mergedExitCount(opcode: Opcode) = indices.count { exitAt(it)?.opcode == opcode }
-
 /** Opcodes that read a goto reaching a return as that return. */
 internal fun List<Instruction>.exitOpcodes() = indices.map { exitAt(it)?.opcode ?: this[it].opcode }
-
-/** Register returned through [index], whether it is the return itself or a goto to one. */
-internal fun List<Instruction>.exitRegister(index: Int) = ((exitAt(index) ?: this[index]) as OneRegisterInstruction).registerA
